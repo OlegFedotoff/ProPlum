@@ -28,5 +28,15 @@
         "code": "000006",
         "name": "DWH-35905 f_update_columns. Добавление параметра p_terminate_lock",
         "comment": "Created from change dvs65_0"
+    },
+    {
+        "code": "000007",
+        "name": "DWH-36876 добавление команд из adwh в группу adwh_without_kdw",
+        "comment": "Created from change dvs65_0"
+    },
+    {
+        "code": "000008",
+        "name": "Example yaml-files",
+        "comment": "Created from change tov_0"
     }
 ]

@@ -1,6 +1,0 @@
-[
-    {
-        "migration": "create.sql",
-        "rollback": "rollback.sql"
-    }
-]

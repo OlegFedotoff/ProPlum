@@ -59,7 +59,7 @@ class Handler(object):
         self.is_core = (set=="hdset")
         self.schema = ""
         self.base_dir = get_current_dir()
-        self.sets_dir = self.base_dir + "/" + Config.sets_dir
+        self.sets_dir = os.path.normpath(os.path.join(self.base_dir, Config.sets_dir))
         self.sets_config = self.sets_dir + "/sets.json"
         self.error_text = ""
         self.sets = {}
