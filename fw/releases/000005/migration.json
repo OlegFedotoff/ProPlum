@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_f_load_simple_extra_params.hsql",
+        "rollback": "rollback_f_load_simple_extra_params.hsql"
+    }
+]

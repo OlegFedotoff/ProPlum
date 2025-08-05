@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_f_switch_partition.hsql",
+        "rollback": "rollback_f_switch_partition.hsql"
+    }
+]

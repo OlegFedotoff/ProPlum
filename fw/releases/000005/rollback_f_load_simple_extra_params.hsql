@@ -1,0 +1,67 @@
+DROP FUNCTION fw.f_load_simple_extra_params(int8, text, text, bool);
+
+CREATE OR REPLACE FUNCTION fw.f_load_simple_extra_params(p_load_id int8, p_src_table text, p_trg_table text DEFAULT NULL::text, p_delete_duplicates bool DEFAULT false)
+	RETURNS bool
+	LANGUAGE plpgsql
+	VOLATILE
+AS $$
+
+
+	/*Solovev Daniil
+    * Komus
+    * 2024*/
+DECLARE
+  v_location  text := 'fw.f_load_simple';
+  v_object_id int8;
+  v_cnt       int8;
+  v_src_table text;
+  v_trg_table text;
+  v_tmp_table text;
+  v_buf_table text;
+  v_schema    text;
+  v_extraction_type text;
+  v_extraction_to   timestamp;
+  v_extraction_from timestamp;
+  v_load_type text;
+  v_res       bool;
+  v_end_date  timestamp;
+  v_delta_fld text;
+  v_date_field text;
+  v_bdate_fld text;
+  v_where     text;
+  v_extr_sql  text;
+  v_merge_key _text;
+BEGIN
+
+ perform fw.f_set_session_param(
+    p_param_name := 'gp_workfile_limit_per_query',
+    p_param_value := '35000000kB');
+
+ perform fw.f_set_session_param(
+    p_param_name := 'gp_workfile_compression',
+    p_param_value := 'on');
+
+ perform fw.f_load_simple(p_load_id, p_src_table, p_trg_table, p_delete_duplicates);
+
+ return true;
+
+ exception when others then
+  raise notice 'ERROR Load object with load_id = %: %',p_load_id,SQLERRM;
+  PERFORM fw.f_write_log(
+     p_log_type    := 'ERROR',
+     p_log_message := 'Load object with load_id = '||p_load_id||' finished with error: '||SQLERRM,
+     p_location    := v_location,
+     p_load_id     := p_load_id);
+   perform fw.f_set_load_id_error(p_load_id := p_load_id);
+   return false;
+END;
+
+
+$$
+EXECUTE ON ANY;
+
+-- Permissions
+
+ALTER FUNCTION fw.f_load_simple_extra_params(int8, text, text, bool) OWNER TO komus_devops;
+GRANT ALL ON FUNCTION fw.f_load_simple_extra_params(int8, text, text, bool) TO public;
+GRANT ALL ON FUNCTION fw.f_load_simple_extra_params(int8, text, text, bool) TO komus_devops;

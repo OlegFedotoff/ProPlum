@@ -1,0 +1,32 @@
+[
+    {
+        "code": "000001",
+        "name": "DWH-27094 S3 Archivation",
+        "comment": "Создание функций, позволяющих архивировать холодные партицированные таблицы в S3"
+    },
+    {
+        "code": "000002",
+        "name": "DWH-27094 S3 Archivation. bugfix",
+        "comment": "Исправление функции объединения партиций fw.f_union_partitions_to_month"
+    },
+    {
+        "code": "000003",
+        "name": "DWH-27094 S3 Archivation. bugfix",
+        "comment": "Исправление создания внешней таблицы. Добавил окончание read для таблиц на чтение в случае архивации в s3"
+    },
+    {
+        "code": "000004",
+        "name": "DWH-27094 S3 Archivation. Change parameters in f_switch_partition",
+        "comment": "Добавление параметра к функции обмена партициями для архивации"
+    },
+    {
+        "code": "000005",
+        "name": "DWH-34835 Исправление f_load_simple_extra_param",
+        "comment": ""
+    },
+    {
+        "code": "000006",
+        "name": "DWH-35905 f_update_columns. Добавление параметра p_terminate_lock",
+        "comment": "Created from change dvs65_0"
+    }
+]

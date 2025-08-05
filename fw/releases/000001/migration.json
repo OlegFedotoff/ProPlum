@@ -1,0 +1,30 @@
+[
+    {
+        "migration": "0_create_objects_archivation.hsql",
+        "rollback": "0_rollback_objects_archivation.hsql"
+    },
+    {
+        "migration": "1_change_f_get_connection_string.hsql",
+        "rollback": "1_rollback_f_get_connection_string.hsql"
+    },
+    {
+        "migration": "2_create_f_check_tab_part_is_insertable_into.hsql",
+        "rollback": "2_rollback_f_check_tab_part_is_insertable_info.hsql"
+    },
+    {
+        "migration": "3_change_f_create_ext_table.hsql",
+        "rollback": "3_rollback_f_create_ext_table.hsql"
+    },
+    {
+        "migration": "4_create_f_union_partitions_to_month.hsql",
+        "rollback": "4_rollback_f_union_partitions_to_month.hsql"
+    },
+    {
+        "migration": "5_create_f_prepare_load_archive.hsql",
+        "rollback": "5_rollback_f_prepare_load_archive.hsql"
+    },
+    {
+        "migration": "6_create_f_archive_data.hsql",
+        "rollback": "6_rollback_f_archive_data.hsql"
+    }
+]
