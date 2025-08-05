@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_f_create_ext_table.hsql",
+        "rollback": "rollback_f_create_ext_table.hsql"
+    }
+]

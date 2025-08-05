@@ -1,0 +1,5 @@
+CREATE SEQUENCE hdset_seq
+  START WITH 11
+  CACHE 1
+  NO CYCLE
+;

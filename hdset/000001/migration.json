@@ -1,0 +1,28 @@
+[
+    
+    {
+        "migration" : "orcl_create_hdset_seq.sql",
+        "rollback"  : "",
+
+        "//" : "Action when object exists: error, skip",
+        "when-exists" : "skip",
+
+        "//" : "Action when excuting error (continue next sql or break): continue, break",
+        "when-error" : "continue",
+
+        "logging"   : false,
+        "db-type"   : "ORCL"
+    },
+    {"migration" : "orcl_create_table_hdset_params.sql",      "db-type"  : "ORCL"},
+    {"migration" : "orcl_create_table_hdset_releases.sql",    "db-type"  : "ORCL"},
+    {"migration" : "orcl_create_table_hdset_migrations.sql",  "db-type"  : "ORCL"},
+    {"migration" : "orcl_create_table_hdset_logs.sql",        "db-type"  : "ORCL"},
+
+    {"migration" : "gp_create_hdset_seq.sql",               "db-type"  : "GP", "when-exists" : "skip", "when-error" : "continue"},
+    {"migration" : "gp_create_table_hdset_params.sql",      "db-type"  : "GP", "when-exists" : "skip", "when-error" : "continue"},
+    {"migration" : "gp_create_table_hdset_releases.sql",    "db-type"  : "GP", "when-exists" : "skip", "when-error" : "continue"},
+    {"migration" : "gp_create_table_hdset_migrations.sql",  "db-type"  : "GP", "when-exists" : "skip", "when-error" : "continue"},
+    {"migration" : "gp_create_table_hdset_logs.sql",        "db-type"  : "GP", "when-exists" : "skip", "when-error" : "continue"}
+
+]
+

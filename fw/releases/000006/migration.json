@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_f_update_columns.sql",
+        "rollback": "rollback_f_update_columns.sql"
+    }
+]

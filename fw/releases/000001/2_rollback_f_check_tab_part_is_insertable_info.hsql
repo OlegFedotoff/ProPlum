@@ -1,0 +1,1 @@
+DROP FUNCTION fw.f_check_tab_part_is_insertable_into(text, text);

@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_f_union_partitions_to_month.hsql",
+        "rollback": "rollback_f_union_partitions_to_month.hsql"
+    }
+]

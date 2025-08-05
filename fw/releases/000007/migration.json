@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_load_groups_in_objects.sql",
+        "rollback": "rollback_load_groups_in_objects.sql"
+    }
+]
