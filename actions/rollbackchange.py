@@ -201,7 +201,7 @@ def _execute_change_rollback(db, migration, change_path, handler, cont=False):
             return False
     else:
         # Use original logic for non-YAML format
-        if not handler.rollback_data(rollback_data, when_exists, when_error):
+        if not _execute_rollback_data_section(db, rollback_data, when_exists, when_error, handler):
             return False
 
     print("    " + "Finished")

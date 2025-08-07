@@ -2,7 +2,7 @@
 HDSET Release Management Framework Version Action
 """
 
-HDSET_VERSION = "2.11"
+HDSET_VERSION = "2.12"
 HDSET_NAME = "HDSET Release Management Framework"
 
 def get_version():
