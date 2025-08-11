@@ -173,6 +173,10 @@ def _execute_change_rollback(db, migration, change_path, handler, cont=False):
     # Check if this is a new format file (YAML-style with environment sections)
     yaml_style = handler.is_yaml_style_format(rollback_data)
     
+    # Set owner role for current schema in GP database
+    if not handler.set_owner_role():
+        return False
+
     if yaml_style:
         # Parse YAML-style rollback data using yaml library
         import yaml

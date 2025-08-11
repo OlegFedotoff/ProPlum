@@ -143,6 +143,25 @@ class Handler(object):
 
 
     ##########################################################  
+    def set_owner_role(self):
+        """Set owner role for current schema in GP/PG database if role exists.
+
+        Returns True if role is set successfully or not applicable. Returns False on error.
+        """
+        if self.db.db_type == "ORCL":
+            return True
+        owner_role = f"role_{self.set}_owner"
+        check_role_sql = "SELECT 1 FROM pg_roles WHERE rolname = %s"
+        self.error_text, role_exists = self.db.get_first_row(check_role_sql, [owner_role])
+        if not self.error_text and role_exists:
+            self.error_text = self.db.execute(f"SET ROLE {owner_role}")
+            if self.error_text:
+                print("!!! Failed to set owner role:", self.error_text)
+                return False
+        return True
+
+
+    ##########################################################  
     def migrate(self, is_core=False, start_release="", cont=False):
         self.is_core = is_core
         self.action_type = self.ACTION_MIGRATE
@@ -170,15 +189,8 @@ class Handler(object):
 
 
         # Set owner role for current schema in GP database
-        if self.db.db_type != "ORCL":
-            owner_role = f"role_{self.set}_owner"
-            check_role_sql = "SELECT 1 FROM pg_roles WHERE rolname = %s"
-            self.error_text, role_exists = self.db.get_first_row(check_role_sql, [owner_role])
-            if not self.error_text and role_exists:
-                self.error_text = self.db.execute(f"SET ROLE {owner_role}")
-                if self.error_text:
-                    print("!!! Failed to set owner role:", self.error_text)
-                    return False
+        if not self.set_owner_role():
+            return False
 
         for release in releases:
             result = self.do_release(release, cont=cont)

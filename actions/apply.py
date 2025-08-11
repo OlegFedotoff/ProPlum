@@ -165,6 +165,11 @@ def _execute_change_migration(db, migration, change_path, handler, cont, set_dir
     
     # Check if this is a new format file (YAML-style with environment sections)
     yaml_style = handler.is_yaml_style_format(migration_data)
+
+    # Set owner role for current schema in GP database
+    if not handler.set_owner_role():
+        return False
+
     
     if yaml_style:
         # Parse YAML-style migration data using yaml library
@@ -194,7 +199,7 @@ def _execute_change_migration(db, migration, change_path, handler, cont, set_dir
             return False
     else:
         # Use original logic for non-YAML format
-        if not handler.migrate_data(migration_data, when_exists, when_error):
+        if not _execute_change_data_section(db, migration_data, when_exists, when_error, handler):
             return False
 
     db.commit()
