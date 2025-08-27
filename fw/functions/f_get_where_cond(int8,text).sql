@@ -1,15 +1,19 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_get_where_cond(p_load_id int8, p_table_alias text DEFAULT NULL::text)
+-- DROP FUNCTION fw.f_get_where_cond(int8, text);
+
+CREATE OR REPLACE FUNCTION fw.f_get_where_cond(p_load_id int8, p_table_alias text DEFAULT NULL::text)
 	RETURNS text
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
+	
 	
 	/*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function get final where condition for load_id from object settings*/
 DECLARE
-  v_location text := '${target_schema}.f_get_where_cond';
+  v_location text := 'fw.f_get_where_cond';
   v_where text;
   v_where_obj text;
   v_sql   text;
@@ -28,7 +32,7 @@ DECLARE
   v_end_date_c text;
   v_alias text;
 BEGIN
- perform ${target_schema}.f_write_log(p_log_type    := 'SERVICE', 
+ perform fw.f_write_log(p_log_type    := 'SERVICE', 
                          p_log_message := 'START Get where condition for load_id '||p_load_id, 
                          p_location    := v_location,
                          p_load_id     := p_load_id); --log function call
@@ -37,10 +41,10 @@ BEGIN
    v_sql := 'select ob.object_name, coalesce(li.load_type, ob.load_type), li.load_from, li.load_to,
              ob.delta_field, coalesce(ob.delta_field_format,''YYYY-MM-DD hh24:mi:ss''), 
              ob.bdate_field, coalesce(ob.bdate_field_format,''YYYY-MM-DD hh24:mi:ss''), ob.object_id 
-             from ${target_schema}.load_info li, ${target_schema}.objects ob where li.object_id = ob.object_id and li.load_id = '||p_load_id::text;
+             from fw.load_info li, fw.objects ob where li.object_id = ob.object_id and li.load_id = '||p_load_id::text;
    execute v_sql into v_full_table_name, v_load_type, v_start_date, v_end_date, v_delta_fld, v_delta_fld_format, v_bdate_fld, v_bdate_fld_format,v_object_id;
-   v_full_table_name  = ${target_schema}.f_unify_name(p_name := v_full_table_name); -- full table name
-   v_where_obj = ${target_schema}.f_get_where_clause(p_object_id := v_object_id);
+   v_full_table_name  = fw.f_unify_name(p_name := v_full_table_name); -- full table name
+   v_where_obj = fw.f_get_where_clause(p_object_id := v_object_id);
     --get delta and bdate fields type or transformation
    --select to_char(now(),'YYYY-MM-DD hh:mi:ss');
    select coalesce(data_type,'timestamp') from information_schema.columns c where c.table_schema||'.'||c.table_name = v_full_table_name and c.column_name = v_delta_fld into v_delta_fld_type;
@@ -110,7 +114,7 @@ BEGIN
    ELSE
       v_where = '1=1';
    END IF;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'END Get where condition for load_id = '||p_load_id||', where condition is: '||coalesce(v_where,'empty'), 
      p_location    := v_location,
@@ -120,11 +124,7 @@ END;
 
 
 
+
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_get_where_cond(int8, text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_get_where_cond(int8, text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_get_where_cond(int8, text) TO "${owner}";

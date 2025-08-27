@@ -1,15 +1,18 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_get_enum_partition(p_field_name text, p_format text, p_start_date date, p_end_date date)
+-- DROP FUNCTION fw.f_get_enum_partition(text, text, date, date);
+
+CREATE OR REPLACE FUNCTION fw.f_get_enum_partition(p_field_name text, p_format text, p_start_date date, p_end_date date)
 	RETURNS text
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
 	
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 	/*get pxf partition in enum format*/
 declare
-    v_location text := '${target_schema}.f_get_enum_partition';
+    v_location text := 'fw.f_get_enum_partition';
     v_format text;
     v_field_name text;
     v_enum_part text;
@@ -18,7 +21,7 @@ declare
     v_start_date date;
     v_end_date date;
 begin
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'Start get enum partition', 
      p_location    := v_location); --log function call
@@ -40,24 +43,19 @@ begin
      v_iter_date = v_iter_date + interval'1 day';
    end loop;
    v_part_string = '&PARTITION_BY='||v_field_name||':enum&RANGE='||v_enum_part;
-   PERFORM ${target_schema}.f_write_log(
+   PERFORM fw.f_write_log(
       p_log_type    := 'SERVICE', 
       p_log_message := 'END get enum partition: '||v_part_string,
       p_location    := v_location); --log function call
    return v_part_string;
    exception when others then 
-    PERFORM ${target_schema}.f_write_log(
+    PERFORM fw.f_write_log(
        p_log_type    := 'ERROR', 
        p_log_message := 'ERROR while geting enum partition: '||SQLERRM, 
        p_location    := v_location);
     return '';
  END;
 
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_get_enum_partition(text, text, date, date) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_get_enum_partition(text, text, date, date) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_get_enum_partition(text, text, date, date) TO "${owner}";

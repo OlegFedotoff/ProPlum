@@ -1,22 +1,25 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_table_exists(p_table_name text)
+-- DROP FUNCTION fw.f_table_exists(text);
+
+CREATE OR REPLACE FUNCTION fw.f_table_exists(p_table_name text)
 	RETURNS bool
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
 	
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function return true if table exists*/
 DECLARE
-  v_location text := '${target_schema}.f_table_exists';
+  v_location text := 'fw.f_table_exists';
   v_sql text; 
   v_res bool;
   v_cnt int8;
   v_table_name text;
 BEGIN
-  v_table_name = ${target_schema}.f_unify_name(p_name := p_table_name);
-  perform ${target_schema}.f_write_log(
+  v_table_name = fw.f_unify_name(p_name := p_table_name);
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'START check if table '||p_table_name||' is exists', 
      p_location    := v_location); --log function call
@@ -27,18 +30,13 @@ BEGIN
   else 
    v_res = true;
   end if;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
    p_log_type    := 'SERVICE',
    p_log_message := 'END check if table '||p_table_name||' is exists - '||v_res,
    p_location    := v_location); --log function call
 return v_res;
 END;
 
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_table_exists(text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_table_exists(text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_table_exists(text) TO "${owner}";

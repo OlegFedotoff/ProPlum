@@ -1,22 +1,25 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_get_distribution_key(p_table_name text)
+-- DROP FUNCTION fw.f_get_distribution_key(text);
+
+CREATE OR REPLACE FUNCTION fw.f_get_distribution_key(p_table_name text)
 	RETURNS text
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
 	
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function return distribution key*/
 DECLARE
-  v_location text := '${target_schema}.f_get_distribution_key';
+  v_location text := 'fw.f_get_distribution_key';
   v_table_name text;
   v_dist_key text;
   v_table_oid int4;
 BEGIN
 
-v_table_name = ${target_schema}.f_unify_name(p_table_name);  
-perform ${target_schema}.f_write_log(
+v_table_name = fw.f_unify_name(p_table_name);  
+perform fw.f_write_log(
      p_log_type := 'SERVICE', 
      p_log_message := 'START get distribution for table '||v_table_name, 
      p_location    := v_location); --log function call
@@ -32,18 +35,13 @@ select c.oid
    v_dist_key = pg_get_table_distributedby(v_table_oid);
  end if;
 
-perform ${target_schema}.f_write_log(
+perform fw.f_write_log(
    p_log_type := 'SERVICE', 
    p_log_message := 'END get distribution for table '||v_table_name||' ,distribution rule: '||v_dist_key, 
    p_location    := v_location); --log function call
  return v_dist_key;
 END;
 
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_get_distribution_key(text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_get_distribution_key(text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_get_distribution_key(text) TO "${owner}";

@@ -1,20 +1,27 @@
-create table ${target_schema}.chains_log 
-(
-log_id int8,
-instance_id int8,
-log_timestamp timestamp,
-log_type text,
-log_msg text,
-	CONSTRAINT pk_chain_log_id PRIMARY KEY (log_id),
-	CONSTRAINT fk_instance_id FOREIGN KEY (instance_id) REFERENCES ${target_schema}.chains_info(instance_id)
-)
-DISTRIBUTED by (log_id);
-COMMENT ON TABLE ${target_schema}.chains_log IS 'Detailed log of process chain';
-COMMENT ON COLUMN ${target_schema}.chains_log.log_id IS 'Log id';
-COMMENT ON COLUMN ${target_schema}.chains_log.instance_id IS 'Process chain instance id';
-COMMENT ON COLUMN ${target_schema}.chains_log.log_timestamp IS 'Message timestamp';
-COMMENT ON COLUMN ${target_schema}.chains_log.log_type IS 'Message type';
-COMMENT ON COLUMN ${target_schema}.chains_log.log_msg IS 'Log message';
+-- fw.chains_log определение
 
-alter table ${target_schema}.chains_log owner to "${owner}";
-grant all on table ${target_schema}.chains_log to "${owner}";
+-- Drop table
+
+-- DROP TABLE fw.chains_log;
+
+CREATE TABLE fw.chains_log (
+	log_id int8 NOT NULL, -- ID сообщения лога
+	instance_id int8 NULL, -- id запуска цепочки
+	log_timestamp timestamp NULL, -- Метка времени возникновения сообщения
+	log_type text NULL, -- Тип сообщения
+	log_msg text NULL, -- Сообщение
+	CONSTRAINT pk_chain_log_id PRIMARY KEY (log_id),
+	CONSTRAINT fk_instance_id FOREIGN KEY (instance_id) REFERENCES fw.chains_info(instance_id)
+)
+DISTRIBUTED BY (log_id);
+COMMENT ON TABLE fw.chains_log IS 'Подробный лог выполнения цепочки';
+
+-- Column comments
+
+COMMENT ON COLUMN fw.chains_log.log_id IS 'ID сообщения лога';
+COMMENT ON COLUMN fw.chains_log.instance_id IS 'id запуска цепочки';
+COMMENT ON COLUMN fw.chains_log.log_timestamp IS 'Метка времени возникновения сообщения';
+COMMENT ON COLUMN fw.chains_log.log_type IS 'Тип сообщения';
+COMMENT ON COLUMN fw.chains_log.log_msg IS 'Сообщение';
+
+

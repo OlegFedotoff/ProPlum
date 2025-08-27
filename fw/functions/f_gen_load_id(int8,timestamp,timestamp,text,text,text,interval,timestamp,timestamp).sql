@@ -1,15 +1,24 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_gen_load_id(p_object_id int8, p_start_extr timestamp DEFAULT NULL::timestamp without time zone, p_end_extr timestamp DEFAULT NULL::timestamp without time zone, p_extraction_type text DEFAULT NULL::text, p_load_type text DEFAULT NULL::text, p_delta_mode text DEFAULT NULL::text, p_load_interval interval DEFAULT NULL::interval, p_start_load timestamp DEFAULT NULL::timestamp without time zone, p_end_load timestamp DEFAULT NULL::timestamp without time zone)
+-- DROP FUNCTION fw.f_gen_load_id(int8, timestamp, timestamp, text, text, text, interval, timestamp, timestamp);
+
+CREATE OR REPLACE FUNCTION fw.f_gen_load_id(p_object_id int8, p_start_extr timestamp DEFAULT NULL::timestamp without time zone, p_end_extr timestamp DEFAULT NULL::timestamp without time zone, p_extraction_type text DEFAULT NULL::text, p_load_type text DEFAULT NULL::text, p_delta_mode text DEFAULT NULL::text, p_load_interval interval DEFAULT NULL::interval, p_start_load timestamp DEFAULT NULL::timestamp without time zone, p_end_load timestamp DEFAULT NULL::timestamp without time zone)
 	RETURNS int8
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
+	
+	
+	
+	
+	
+	
 		
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function generates load_id for object*/
 DECLARE
-    v_location           text := '${target_schema}.f_gen_load_id';
+    v_location           text := 'fw.f_gen_load_id';
     v_object_id          int8;
     v_start_date         timestamp;
     v_end_date           timestamp;
@@ -36,14 +45,18 @@ DECLARE
     i                    int;
     k                    int;
     v_sql                text;
+    v_delta_field        text;   
+    v_bdate_safety_period text;
+    v_load_start_date    timestamp;
+ 
 BEGIN
 
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
        p_log_type := 'SERVICE', 
        p_log_message := 'START Generate load_id for object '||p_object_id, 
        p_location    := v_location); --log function call
 
-   v_load_id = ${target_schema}.f_get_load_id( --find existing load_id
+   v_load_id = fw.f_get_load_id( --find existing load_id
       p_object_id  := p_object_id, 
       p_start_date := p_start_extr::date, 
       p_end_date   := p_end_extr::date);
@@ -66,12 +79,13 @@ BEGIN
            coalesce(p_delta_mode, delta_mode),
            coalesce(p_extraction_type, extraction_type),
            coalesce(p_load_type, load_type),
-           '1 day'::interval 
-    into v_object_id, v_begindate, v_delta_mode, v_extraction_type, v_load_type, v_add_days
-    from ${target_schema}.objects ob
+           '1 day'::interval,
+           bdate_safety_period, delta_field, coalesce(load_start_date,'1980-01-01'::timestamp)
+    into v_object_id, v_begindate, v_delta_mode, v_extraction_type, v_load_type, v_add_days, v_bdate_safety_period, v_delta_field, v_load_start_date
+    from fw.objects ob
     where object_id = p_object_id;
 
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
        p_log_type    := 'DEBUG',
        p_log_message := 'Variables: v_object_id:{' || v_object_id || '}, v_beginDate:{' || v_begindate || '}, v_delta_mode:{' ||v_delta_mode || '}, v_extraction_type:{' || v_extraction_type || ', v_load_type:{' || v_load_type || '}', 
        p_location    := v_location);
@@ -79,7 +93,7 @@ BEGIN
     -- no such object
     if v_object_id is null then
         v_error := 'Could not find object '||p_object_id||' for generating load_id';
-        perform ${target_schema}.f_write_log(
+        perform fw.f_write_log(
            p_log_type    := 'ERROR', 
            p_log_message := 'Error while generating load_id: ' || v_error, 
            p_location    := v_location);
@@ -87,20 +101,31 @@ BEGIN
     end if;
 
     -- get last load date
+ /*  
     v_sql := 'select coalesce(' || coalesce('''' || p_start_extr::text || '''', 'null') ||
              '::timestamp, max(extraction_to), ' || coalesce('''' || v_begindate::text || '''', 'null') ||
-             '::timestamp) from ${target_schema}.load_info
+             '::timestamp) from fw.load_info
+             where object_id = ' || v_object_id::text || 
+             ' and (extraction_to::date between date_trunc(''mon'', current_date) - case when date_part(''day'', current_date)  = 1 then  interval ''1 mon'' else ''0 day'' end  - interval ''1 day'' and 
+                    date_trunc(''mon'', current_date) + case when date_part(''day'', current_date) = 1 then ''0 day'' else interval ''1 mon'' end  - interval ''1 day'' )
+             and load_status = '||c_load_id_succ_status::text;
+*/
+  v_sql := 'select coalesce(' || coalesce('''' || p_start_extr::text || '''', 'null') ||
+             '::timestamp, max(extraction_to), ' || coalesce('''' || v_begindate::text || '''', 'null') ||
+             '::timestamp) from fw.load_info
              where object_id = ' || v_object_id::text || 
              ' and (extraction_to::date < current_date + ''' ||v_add_days::text || '''::interval)
              and load_status = '||c_load_id_succ_status::text;
-    perform ${target_schema}.f_write_log(
+   
+            
+    perform fw.f_write_log(
        p_log_type    := 'DEBUG',
        p_log_message := 'Get last load date with sql: {' || v_sql || '}', 
        p_location    := v_location);
 
     execute v_sql into v_lastdate;
 
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
        p_log_type    := 'DEBUG',
        p_log_message := 'Last load date for object '||v_object_id||' is: '|| v_lastdate, 
        p_location    := v_location);
@@ -114,26 +139,60 @@ BEGIN
            coalesce(p_end_extr, current_timestamp)::timestamp,
            load_method
     into v_load_interval, v_safetyperiod,v_start_date,v_end_date,v_load_method
-     from ${target_schema}.objects ob
+     from fw.objects ob
     where ob.object_id = p_object_id;
   -- prepare start and end dates for load_load_interval dates
-        IF v_load_interval::text like '%month%' or v_load_interval::text like '%mon%' THEN
+       IF v_extraction_type = 'FULL' AND upper(v_load_method) = 'PXF'
+           AND v_delta_field is not null 
+           --================================================
+           
+          then  
+           if v_bdate_safety_period in ('1 day','1 mon','1 year')
+           then
+             v_bdate_safety_period = replace(replace(replace(v_bdate_safety_period,'1 day','day'),'1 mon','month'),'1 year','year');
+             v_start_date := case when v_bdate_safety_period in ('day','month','year')
+                                  then date_trunc(v_bdate_safety_period,current_date) else current_date end - v_load_interval::interval;
+             v_end_date := current_date;
+           else
+             v_start_date := v_load_start_date;
+             v_end_date := current_date;
+           end if;
+           
+           --====================================================
+           -- then
+           --  v_bdate_safety_period = replace(replace(replace(v_bdate_safety_period,'1 day','day'),'1 mon','month'),'1 year','year');
+           --  v_start_date := case when v_bdate_safety_period in ('day','month','year')
+           --                       then date_trunc(v_bdate_safety_period,current_date) else current_date end - v_load_interval::interval;
+           --  v_end_date := current_date;
+        ELSIF v_extraction_type = 'FULL' AND upper(v_load_method) = 'PXF'
+           AND v_delta_field is null
+            THEN
+             v_start_date := DATE_TRUNC('day', v_start_date);
+             v_end_date := DATE_TRUNC('day', v_end_date) + v_load_interval;
+             --v_start_date := null;
+             --v_end_date := null;  
+   
+        ELSIF v_load_interval::text like '%month%' or v_load_interval::text like '%mon%' --AND v_extraction_type not in ('FULL') AND upper(v_load_method) not in ('PXF') 
+         THEN
             v_start_date := DATE_TRUNC('month', v_start_date);
             v_end_date := DATE_TRUNC('month', v_end_date) + v_load_interval;
-        ELSIF v_load_interval::text like '%day%' THEN
+        ELSIF v_load_interval::text like '%day%' --AND v_extraction_type not in ('FULL') AND upper(v_load_method) not in ('PXF')  
+         THEN
             v_start_date := DATE_TRUNC('day', v_start_date);
             v_end_date := DATE_TRUNC('day', v_end_date) + '1 day'::interval; 
-        ELSIF v_load_interval::text like '%year%' THEN
+        ELSIF v_load_interval::text like '%year%' --AND v_extraction_type not in ('FULL') AND upper(v_load_method) not in ('PXF')  
+         THEN
             v_start_date := DATE_TRUNC('year', v_start_date);
             v_end_date := DATE_TRUNC('year', v_end_date) + v_load_interval;
-        ELSIF v_load_interval::text like '%hour%' THEN
+        ELSIF v_load_interval::text like '%hour%' --AND v_extraction_type not in ('FULL') AND upper(v_load_method) not in ('PXF') 
+         THEN
             v_start_date := DATE_TRUNC('hour', v_start_date);
             v_end_date   := DATE_TRUNC('hour', v_end_date) + v_load_interval;
-        ELSE
-            v_start_date := v_start_date;
-            v_end_date := v_end_date;
+           ELSE
+            v_start_date := DATE_TRUNC('day', v_start_date);
+            v_end_date := DATE_TRUNC('day', v_end_date);
         END IF;
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
        p_log_type    := 'DEBUG', 
        p_log_message := 'Start date: {' || coalesce(v_start_date,c_minDate) || '}, end date: {' || coalesce(v_end_date,c_maxDate) || '}',
        p_location    := v_location);
@@ -141,9 +200,9 @@ BEGIN
     --create load_id for each template_type
     IF v_delta_mode = 'FULL' THEN
         --check if load_id exists
-         IF NOT ${target_schema}.f_load_id_exists(p_object_id:=p_object_id, p_start_date:=c_minDate, p_end_date:=c_maxDate) THEN
-            v_load_id = nextval('${target_schema}.load_id_seq');
-            v_sql := 'insert into ${target_schema}.load_info
+         IF NOT fw.f_load_id_exists(p_object_id:=p_object_id, p_start_date:=c_minDate, p_end_date:=c_maxDate) THEN
+            v_load_id = nextval('fw.load_id_seq');
+            v_sql := 'insert into fw.load_info
                      (load_id, extraction_type, load_type, object_id, load_status, extraction_from, extraction_to,load_method) values (' ||
                      v_load_id::text || ', ''' || 
                      v_extraction_type|| ''', '''||
@@ -152,9 +211,19 @@ BEGIN
                      c_load_id_new_status::text || ', ''' || 
                      coalesce(v_start_date::text,c_minDate::text) || '''::timestamp, ''' ||
                      coalesce(v_end_date::text,c_maxDate::text) || '''::timestamp,'''||
-                     v_load_method||'''::text);';
+                     v_load_method||'''::text);';  
+     /*         v_sql := 'insert into fw.load_info
+                     (load_id, extraction_type, load_type, object_id, load_status, extraction_from, extraction_to,load_method) values (' ||
+                     v_load_id::text || ', ''' ||
+                     v_extraction_type|| ''', '''||
+                     v_load_type || ''', ' || 
+                     p_object_id::text || ', ' ||
+                     c_load_id_new_status::text || ', ''' || 
+                     coalesce(v_start_date::text,c_minDate::text) || '''::timestamp, ''' ||
+                     coalesce(v_end_date::text,c_maxDate::text) || '''::timestamp,'''||
+                     v_load_method||'''::text);';  */
             execute v_sql;
-            perform ${target_schema}.f_write_log(
+            perform fw.f_write_log(
                p_log_type    := 'SERVICE',
                p_log_message := 'Created load_id for object' || p_object_id, 
                p_location    := v_location, 
@@ -163,9 +232,9 @@ BEGIN
     ELSIF v_delta_mode = 'DELTA' THEN
         IF v_extraction_type = 'DELTA' THEN
             --check if load_id exists
-            IF NOT ${target_schema}.f_load_id_exists(p_object_id:=p_object_id, p_start_date:= (v_start_date - v_safetyperiod),p_end_date:=v_end_date) THEN
-                v_load_id = nextval('${target_schema}.load_id_seq');
-                v_sql := 'insert into ${target_schema}.load_info
+            IF NOT fw.f_load_id_exists(p_object_id:=p_object_id, p_start_date:= (v_start_date - v_safetyperiod),p_end_date:=v_end_date) THEN
+                v_load_id = nextval('fw.load_id_seq');
+                v_sql := 'insert into fw.load_info
 						 (load_id, extraction_type, load_type, object_id, load_status, extraction_from, extraction_to, load_method) values (' ||
                          v_load_id::text || ', ''' || 
                          v_extraction_type|| ''', '''||
@@ -177,7 +246,7 @@ BEGIN
                          v_load_method||'''::text);';
                 raise notice 'DEBUG: insert into load_info with sql v_sql: {%}',v_sql;
                 execute v_sql;
-                perform ${target_schema}.f_write_log(
+                perform fw.f_write_log(
                    p_log_type    := 'SERVICE',
                    p_log_message := 'Created load_id for object ' || p_object_id, 
                    p_location    := v_location, 
@@ -185,9 +254,9 @@ BEGIN
             END IF;
         ELSE
             --check if load_id exists
-            IF NOT ${target_schema}.f_load_id_exists(p_object_id:=p_object_id, p_start_date:=v_start_date, p_end_date:=v_end_date) THEN
-                v_load_id = nextval('${target_schema}.load_id_seq');
-                v_sql := 'insert into ${target_schema}.load_info
+            IF NOT fw.f_load_id_exists(p_object_id:=p_object_id, p_start_date:=v_start_date, p_end_date:=v_end_date) THEN
+                v_load_id = nextval('fw.load_id_seq');
+                v_sql := 'insert into fw.load_info
                          (load_id, extraction_type, load_type, object_id, load_status, extraction_from, extraction_to, load_method) values (' ||
                          v_load_id::text || ', ''' || 
                          v_extraction_type|| ''', '''||
@@ -199,7 +268,7 @@ BEGIN
                          v_load_method||'''::text);';
                 raise notice 'DEBUG: insert into load_info with sql v_sql: {%}',v_sql;        
                 execute v_sql;
-                perform ${target_schema}.f_write_log(
+                perform fw.f_write_log(
                    p_log_type    := 'SERVICE',
                    p_log_message := 'Created load_id for object' || p_object_id, 
                    p_location    := v_location, 
@@ -214,7 +283,7 @@ BEGIN
             LOOP
                 v_iterDate = v_start_date + v_load_interval;
     
-                PERFORM ${target_schema}.f_write_log(
+                PERFORM fw.f_write_log(
                    p_log_type    := 'DEBUG', 
                    p_log_message := 'v_iterDate:{' || v_iterDate || '}', 
                    p_location    := v_location);
@@ -223,9 +292,9 @@ BEGIN
                           ((v_iterDate > v_end_date) AND (v_load_interval <> '1 day'::interval));
 
                 --check load_id already exists
-                IF NOT ${target_schema}.f_load_id_exists(p_object_id:=p_object_id, p_start_date:= (v_start_date - v_safetyperiod), p_end_date:=v_iterDate) THEN
-                      v_load_id = nextval('${target_schema}.load_id_seq');
-                      v_sql := 'insert into ${target_schema}.load_info
+                IF NOT fw.f_load_id_exists(p_object_id:=p_object_id, p_start_date:= (v_start_date - v_safetyperiod), p_end_date:=v_iterDate) THEN
+                      v_load_id = nextval('fw.load_id_seq');
+                      v_sql := 'insert into fw.load_info
                                (load_id, extraction_type, load_type, object_id, load_status, extraction_from, extraction_to, load_method) values (' ||
                                v_load_id::text || ', ''' || 
                                v_extraction_type|| ''', '''||
@@ -237,7 +306,7 @@ BEGIN
                                v_load_method||'''::text);';
                       RAISE NOTICE 'sql string for insert [%]',v_sql;
                       execute v_sql;
-                      perform ${target_schema}.f_write_log(
+                      perform fw.f_write_log(
                          p_log_type    := 'SERVICE',
                          p_log_message := 'Created load_id '||v_load_id||' with interval (' || v_start_date || '-' || v_iterDate||' for object ' || p_object_id, 
                          p_location    := v_location, 
@@ -246,7 +315,7 @@ BEGIN
                 v_start_date := v_iterDate;
             END LOOP;
         ELSIF v_load_interval is null then
-            perform ${target_schema}.f_write_log(
+            perform fw.f_write_log(
                p_log_type    := 'ERROR',
                p_log_message := 'load_interval could not be null for ITER object '||p_object_id, 
                p_location    := v_location);
@@ -254,18 +323,18 @@ BEGIN
         END IF;
     ELSE
        v_error := 'Illegal object delta_mode ';
-       perform ${target_schema}.f_write_log(
+       perform fw.f_write_log(
           p_log_type    := 'ERROR',
           p_log_message := v_error || v_delta_mode || ' for object ' || p_object_id,
           p_location    := v_location);
         RAISE EXCEPTION '% % for object %',v_error, v_delta_mode,p_object_id;
     END IF;
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
        p_log_type    := 'SERVICE', 
        p_log_message := 'END Generate load_id for object ' ||p_object_id, 
        p_location    := v_location);
     if v_load_id is null then
-      perform ${target_schema}.f_write_log(
+      perform fw.f_write_log(
          p_log_type    := 'ERROR',
          p_log_message := 'Unable to generate load_id for object '||p_object_id,
          p_location    := v_location);
@@ -274,11 +343,12 @@ BEGIN
 END;
 
 
+
+
+
+
+
+
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_gen_load_id(int8, timestamp, timestamp, text, text, text, interval, timestamp, timestamp) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_gen_load_id(int8, timestamp, timestamp, text, text, text, interval, timestamp, timestamp) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_gen_load_id(int8, timestamp, timestamp, text, text, text, interval, timestamp, timestamp) TO "${owner}";

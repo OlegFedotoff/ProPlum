@@ -1,22 +1,25 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_get_min_value(p_table_name text, p_field_name text, p_where text DEFAULT NULL::text)
+-- DROP FUNCTION fw.f_get_min_value(text, text, text);
+
+CREATE OR REPLACE FUNCTION fw.f_get_min_value(p_table_name text, p_field_name text, p_where text DEFAULT NULL::text)
 	RETURNS text
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
 	
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function returns min p_field_name value from p_table_name*/
 DECLARE
-  v_location text := '${target_schema}.f_get_min_value';
+  v_location text := 'fw.f_get_min_value';
   v_sql text; 
   v_datatype text;
   v_where text;
   v_res text;
 BEGIN
 
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'START find min value from table '||p_table_name||' in field '||p_field_name, 
      p_location    := v_location); --log function call
@@ -24,30 +27,25 @@ BEGIN
   --execute v_sql into v_datatype;
   v_where = coalesce(p_where,'1=1');
   v_sql = 'select min('||p_field_name||')::text from '||p_table_name||' where '||v_where;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
    p_log_type    := 'SERVICE', 
    p_log_message := 'Find min sql is: '||v_sql, 
    p_location    := v_location); --log function call
   execute v_sql into v_res;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
    p_log_type    := 'SERVICE', 
    p_log_message := 'END find min value from table '||p_table_name||' in field '||p_field_name||', min value is: '||v_res, 
    p_location    := v_location); --log function call
    return v_res;
   exception when others then 
      raise notice 'Function f_get_min_value for table % and field % finished with error: %',p_table_name,p_field_name,sqlerrm;
-     PERFORM ${target_schema}.f_write_log(
+     PERFORM fw.f_write_log(
         p_log_type    := 'ERROR', 
         p_log_message := 'Function f_get_min_value for table '||p_table_name||' and field '||p_field_name||' finished with error: '||SQLERRM, 
         p_location    := v_location);
        return null::text;
 END;
 
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_get_min_value(text, text, text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_get_min_value(text, text, text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_get_min_value(text, text, text) TO "${owner}";

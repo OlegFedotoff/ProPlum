@@ -1,13 +1,12 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_create_obj_sql(p_schema_name text, p_obj_name text, p_sql_text text, p_grants_template text DEFAULT NULL::text, p_mat_flg bool DEFAULT true, p_storage_opt text DEFAULT NULL::text, p_analyze_flg bool DEFAULT true, p_temporary bool DEFAULT false, p_distr_cls text DEFAULT NULL::text)
+-- DROP FUNCTION fw.f_create_obj_sql(text, text, text, text, bool, text, bool, bool, text);
+
+CREATE OR REPLACE FUNCTION fw.f_create_obj_sql(p_schema_name text, p_obj_name text, p_sql_text text, p_grants_template text DEFAULT NULL::text, p_mat_flg bool DEFAULT true, p_storage_opt text DEFAULT NULL::text, p_analyze_flg bool DEFAULT true, p_temporary bool DEFAULT false, p_distr_cls text DEFAULT NULL::text)
 	RETURNS int8
 	LANGUAGE plpgsql
 	SECURITY DEFINER
 	VOLATILE
 AS $$
-    /*Ismailov Dmitry
-    * Sapiens Solutions 
-    * 2023*/
-/*create object from sql */
+	
 
 declare 
     v_schema_name text;
@@ -18,13 +17,13 @@ declare
     v_cr_obj_type text;
     v_sql_text text;
     v_sql_in text:='('||p_sql_text||')';
-    v_location text := '${target_schema}.f_create_obj_sql';
+    v_location text := 'fw.f_create_obj_sql';
 begin
     v_cr_obj_type:=decode(p_mat_flg,true,decode(p_temporary,true,'temp table ','table '),'view ') ;
     v_schema_name = coalesce(lower(p_schema_name),'public');
     v_obj_name = lower(p_obj_name);
     v_obj_name_full = decode(p_temporary,true,'',v_schema_name||'.')||v_obj_name;
-    PERFORM ${target_schema}.f_write_log(
+    PERFORM fw.f_write_log(
       p_log_type    := 'SERVICE', 
       p_log_message := 'START Create '||v_cr_obj_type||' '||v_obj_name_full||' with sql: '||p_sql_text, 
       p_location    := v_location);
@@ -35,7 +34,7 @@ begin
       select max(tablename) into v_cr_obj from pg_catalog.pg_tables pt  where schemaname=v_schema_name and tablename=v_obj_name;
       v_sql_text:='drop '||decode(v_cr_obj,null,'view','table')||' if exists ' ||v_obj_name_full||' cascade';
       --Log
-      PERFORM ${target_schema}.f_write_log(        
+      PERFORM fw.f_write_log(        
         p_log_type    := 'SERVICE',
         p_log_message := 'Drop '||v_obj_name_full||' with sql: '||v_sql_text,
         p_location    := v_location);
@@ -51,7 +50,7 @@ begin
     v_sql_text := 'create or replace view '||v_obj_name_full||' as select * from '||v_sql_in||' tmp';
   end if;
   
-  PERFORM ${target_schema}.f_write_log(
+  PERFORM fw.f_write_log(
     p_log_type    := 'SERVICE',
     p_log_message := 'Create '||v_cr_obj_type||' '||v_obj_name_full||' with sql: '||v_sql_text,
     p_location    := v_location);
@@ -60,40 +59,35 @@ begin
    GET DIAGNOSTICS v_cnt = ROW_COUNT;
    
    if p_mat_flg is true then
-    PERFORM ${target_schema}.f_write_log(        
+    PERFORM fw.f_write_log(        
       p_log_type    := 'SERVICE',  
       p_log_message := 'Table '||v_obj_name_full||' was created successfully. '||v_cnt||' rows appended',
       p_location    := v_location);
    else 
-    PERFORM ${target_schema}.f_write_log(        
+    PERFORM fw.f_write_log(        
       p_log_type    := 'SERVICE',  
       p_log_message := 'View '||v_obj_name_full||' was created successfully',
       p_location    := v_location);
    end if;
    -- grant permissions on object from template
    if p_grants_template is not null then 
-  	perform ${target_schema}.f_grant_select(
+  	perform fw.f_grant_select(
   	  p_trg_table_name := v_obj_name_full, 
   	  p_src_table      := p_grants_template);
    end if;
      /*3.Collect statistic*/
    if p_analyze_flg  is true and p_mat_flg is true then
-    perform ${target_schema}.f_analyze_table(p_table_name := v_obj_name_full); 
+    perform fw.f_analyze_table(p_table_name := v_obj_name_full); 
    end if;
   return v_cnt;
  exception when others then 
    raise notice 'ERROR loading table: %',SQLERRM;
-      PERFORM ${target_schema}.f_write_log(        
+      PERFORM fw.f_write_log(        
       p_log_type    := 'ERROR',  
       p_log_message := 'ERROR while creating table '||v_obj_name,
       p_location    := v_location);
    return null;
  end;
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_create_obj_sql(text, text, text, text, bool, text, bool, bool, text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_create_obj_sql(text, text, text, text, bool, text, bool, bool, text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_create_obj_sql(text, text, text, text, bool, text, bool, bool, text) TO "${owner}";

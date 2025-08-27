@@ -1,16 +1,18 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_upsert_table(p_load_id int8, p_table_from_name text, p_table_to_name text, p_delete_duplicates bool DEFAULT false, p_analyze bool DEFAULT true, p_where text DEFAULT NULL::text)
+-- DROP FUNCTION fw.f_upsert_table(int8, text, text, bool, bool, text);
+
+CREATE OR REPLACE FUNCTION fw.f_upsert_table(p_load_id int8, p_table_from_name text, p_table_to_name text, p_delete_duplicates bool DEFAULT false, p_analyze bool DEFAULT true, p_where text DEFAULT NULL::text)
 	RETURNS int8
 	LANGUAGE plpgsql
 	SECURITY DEFINER
 	VOLATILE
 AS $$
-	
+		
 	/*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function merges one table to another by delete insert*/
 DECLARE
-    v_location          text := '${target_schema}.f_upsert_table';
+    v_location          text := 'fw.f_upsert_table';
     v_table_from_name   text;
     v_table_to_name     text;
     v_merge_key_arr     text[];
@@ -22,26 +24,30 @@ DECLARE
     v_cnt               int8;
     v_table_cols        text;
     v_where             text;
+    v_query             text;
+    v_end_date          timestamp;
+    v_cnt_partitions    int8;
+    v_col_part          text;
 begin
 	
 --Upsert rows from source table (p_table_from_name) into target table (p_table_to_name) using "merge key" from object settings 
 --1. Delete all rows from target table which exist in source table
 --2. Insert all rows from source table into target table
   --Log
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'Start upsert table ' || p_table_to_name ||' from '||p_table_from_name, 
      p_location    := v_location,
      p_load_id     := p_load_id); --log function call
-  v_table_from_name   = ${target_schema}.f_unify_name(p_name := p_table_from_name);
-  v_table_to_name     = ${target_schema}.f_unify_name(p_name := p_table_to_name); 
+  v_table_from_name   = fw.f_unify_name(p_name := p_table_from_name);
+  v_table_to_name     = fw.f_unify_name(p_name := p_table_to_name); 
   v_where = coalesce(p_where,'1=1');
-  select o.object_id, o.delta_field  from ${target_schema}.load_info li 
-   inner join ${target_schema}.objects o on li.object_id = o.object_id
+  select o.object_id, o.delta_field  from fw.load_info li 
+   inner join fw.objects o on li.object_id = o.object_id
   where li.load_id = p_load_id into v_object_id,v_delta_fld;
-  v_merge_key_arr     = ${target_schema}.f_get_merge_key(p_object_id := v_object_id);
+  v_merge_key_arr     = fw.f_get_merge_key(p_object_id := v_object_id);
   if v_merge_key_arr is null then
-    perform ${target_schema}.f_write_log(
+    perform fw.f_write_log(
       p_log_type    := 'ERROR', 
       p_log_message := 'ERROR while upsert table ' || p_table_to_name ||' from '||p_table_from_name||', merge key for object is null', 
       p_location    := v_location,
@@ -55,11 +61,36 @@ begin
    FROM information_schema.columns
    WHERE table_schema||'.'||table_name  = v_table_to_name;
   
+  --Create patrition if table with partition
+  select count(*)  cnt into v_cnt_partitions
+    from pg_partitions p
+  where p.schemaname||'.'||p.tablename = lower(v_table_to_name); 
+  perform fw.f_write_log(
+     p_log_type    := 'SERVICE', 
+     p_log_message := 'Upsert table has - ' || v_cnt_partitions ||' -  partitions ', 
+     p_location    := v_location,
+     p_load_id     := p_load_id);
+   -- if exist partitions take column_name of partition
+  
+   if v_cnt_partitions>1  then
+   select columnname into v_col_part from  pg_catalog.pg_partition_columns p where p.schemaname||'.'||p.tablename = lower(v_table_to_name) ;
+   v_query='select max('||v_col_part||') from '||v_table_from_name;
+   execute v_query into v_end_date;
+   raise notice 'v_table_from_name = % v_col_part = %  v_end_date=%',v_table_from_name, v_col_part, v_end_date;
+   
+     -- function CREATED PARTITION
+      if v_end_date is not null then
+      perform fw.f_create_date_partitions(
+              p_table_name      := v_table_to_name, 
+              p_partition_value := v_end_date);
+      end if;
+      
+   end if;
   --Generate script for Deletion
   select 'DELETE FROM '||v_table_to_name||' USING '||v_table_from_name||' WHERE '||v_where||
           array_to_string(array(select replace(' AND ('||v_table_from_name||'.MERGE_KEY IS NOT DISTINCT FROM '||v_table_to_name||'.MERGE_KEY) ' 
 		  , 'MERGE_KEY', unnest(v_merge_key_arr))), ' ') into v_delete_query;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'Upsert table ' || p_table_to_name ||' with delete query: '||v_delete_query, 
      p_location    := v_location,
@@ -76,19 +107,19 @@ begin
     else 
       ' FROM '||v_table_from_name||' where '||v_where||') t'
     end ;
-   perform ${target_schema}.f_write_log(
+   perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'Upsert table ' || p_table_to_name ||' with insert query: '||v_insert_query, 
      p_location    := v_location,
      p_load_id     := p_load_id); --log function call
   --Execute insert query
-  v_cnt =  ${target_schema}.f_insert_table_sql(
+  v_cnt =  fw.f_insert_table_sql(
      p_sql        := v_insert_query,
      p_table_to   := v_table_to_name); --load from stage (delta) table into target 
   if p_analyze is true then
-    perform ${target_schema}.f_analyze_table(p_table_name := v_table_to_name); 
+    perform fw.f_analyze_table(p_table_name := v_table_to_name); 
   end if;
-  perform ${target_schema}.f_write_log(
+  perform fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'End upsert table '||p_table_to_name||' from '||p_table_from_name, 
      p_location    := v_location,
@@ -96,12 +127,5 @@ begin
   return v_cnt;
 END;
 
-
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_upsert_table(int8, text, text, bool, bool, text) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_upsert_table(int8, text, text, bool, bool, text) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_upsert_table(int8, text, text, bool, bool, text) TO "${owner}";

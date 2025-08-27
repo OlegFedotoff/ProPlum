@@ -1,12 +1,18 @@
-CREATE TABLE ${target_schema}.dependencies (
-	object_id int8 NULL,
-	object_id_depend int8 NULL,
-	CONSTRAINT fk_object_id FOREIGN KEY (object_id) REFERENCES ${target_schema}.objects(object_id),
-	CONSTRAINT fk_object_id_depend FOREIGN KEY (object_id_depend) REFERENCES ${target_schema}.objects(object_id)
+-- fw.dependencies определение
+
+-- Drop table
+
+-- DROP FOREIGN TABLE fw.dependencies;
+
+CREATE FOREIGN TABLE fw.dependencies (
+	object_id int8 NULL, -- id объекта из objects
+	object_id_depend int8 NULL -- id объекта, от которого зависит dependencies.object_id
 )
-DISTRIBUTED REPLICATED;
+SERVER pg_fw_prod
+OPTIONS (table_name 'dependencies');
+COMMENT ON FOREIGN TABLE fw.dependencies IS 'Информация о зависимостях при загрузке объектов';
 
--- Permissions
+-- Column comments
 
-ALTER TABLE ${target_schema}.dependencies OWNER TO "${owner}";
-GRANT ALL ON TABLE ${target_schema}.dependencies TO "${owner}";
+COMMENT ON COLUMN fw.dependencies.object_id IS 'id объекта из objects';
+COMMENT ON COLUMN fw.dependencies.object_id_depend IS 'id объекта, от которого зависит dependencies.object_id';

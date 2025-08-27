@@ -1,15 +1,18 @@
-CREATE OR REPLACE FUNCTION ${target_schema}.f_get_partition_interval(p_table_name text, p_partition_value timestamp DEFAULT NULL::timestamp without time zone)
+-- DROP FUNCTION fw.f_get_partition_interval(text, timestamp);
+
+CREATE OR REPLACE FUNCTION fw.f_get_partition_interval(p_table_name text, p_partition_value timestamp DEFAULT NULL::timestamp without time zone)
 	RETURNS interval
 	LANGUAGE plpgsql
 	VOLATILE
 AS $$
+	
 	
 	/*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
 /*Function search partition for table*/
 DECLARE
-  v_location            text := '${target_schema}.f_get_partition_interval';
+  v_location            text := 'fw.f_get_partition_interval';
   v_cnt_partitions      int;
   v_table_name          text;
   v_error               text;
@@ -22,9 +25,9 @@ DECLARE
 BEGIN
 
   -- Unify parameters
-  v_table_name = ${target_schema}.f_unify_name(p_table_name);
+  v_table_name = fw.f_unify_name(p_table_name);
   --Log
-  PERFORM ${target_schema}.f_write_log(
+  PERFORM fw.f_write_log(
      p_log_type    := 'SERVICE', 
      p_log_message := 'START Get partition interval for table '||v_table_name, 
      p_location    := v_location);
@@ -36,7 +39,7 @@ BEGIN
   where p.schemaname||'.'||p.tablename = lower(v_table_name);
  
   if v_cnt_partitions <= 1 then
-    PERFORM ${target_schema}.f_write_log(
+    PERFORM fw.f_write_log(
          p_log_type    := 'SERVICE', 
          p_log_message := 'Table is not partitioned '||v_table_name, 
          p_location    := v_location);
@@ -45,7 +48,7 @@ BEGIN
  
      IF p_partition_value is not null THEN
       v_partition_name = 
-         ${target_schema}.f_partition_name_by_value(
+         fw.f_partition_name_by_value(
             p_table_name      := v_table_name, 
             p_partition_value := p_partition_value);
      END IF;
@@ -80,14 +83,14 @@ BEGIN
       else
         v_interval := null;
         v_error := 'Unable to define partition interval';
-        PERFORM ${target_schema}.f_write_log(
+        PERFORM fw.f_write_log(
            p_log_type    := 'ERROR', 
            p_log_message := 'Error while getting partition in table '||v_table_name||':'||v_error, 
            p_location    := v_location);
       END IF;
 
   -- Log Success
-  PERFORM ${target_schema}.f_write_log(
+  PERFORM fw.f_write_log(
      p_log_type    :='SERVICE', 
      p_log_message := 'END Get partition interval for table '||v_table_name||' ,interval is '||v_interval, 
      p_location    := v_location);
@@ -95,11 +98,6 @@ BEGIN
 END;
 
 
+
 $$
 EXECUTE ON ANY;
-
--- Permissions
-
-ALTER FUNCTION ${target_schema}.f_get_partition_interval(text, timestamp) OWNER TO "${owner}";
-GRANT ALL ON FUNCTION ${target_schema}.f_get_partition_interval(text, timestamp) TO public;
-GRANT ALL ON FUNCTION ${target_schema}.f_get_partition_interval(text, timestamp) TO "${owner}";
