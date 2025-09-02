@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_fw_f_union_partitions_to_month.sql",
+        "rollback": "rollback_fw_f_union_partitions_to_month.sql"
+    }
+]
