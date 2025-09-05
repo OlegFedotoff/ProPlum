@@ -38,5 +38,10 @@
         "code": "000008",
         "name": "Example yaml-files",
         "comment": "Created from change tov_0"
+    },
+    {
+        "code": "000009",
+        "name": "change komus_devops",
+        "comment": "Created from change dvs65_0"
     }
 ]

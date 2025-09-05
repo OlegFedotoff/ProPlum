@@ -3,7 +3,6 @@ CREATE OR REPLACE FUNCTION fw.f_union_partitions_to_month(p_load_id bigint)
  LANGUAGE plpgsql
  SECURITY DEFINER
 AS $$
-	
 
 
     /* Solovev D (nov 2024)
@@ -275,7 +274,6 @@ AS $$
      perform fw.f_set_load_id_error(p_load_id := p_load_id);
      return false;
 END;
-
 
 
 $$
