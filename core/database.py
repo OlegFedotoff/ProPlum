@@ -186,6 +186,9 @@ class Database(object):
         result = ""
         skip = False
         object_type, object_schema, object_name, description = get_sql_info(sql)
+        if description == "Empty sql":  
+            return object_type, object_schema, object_name, description, ""
+
 
         if self.db_type == "ORCL":
             object_schema = object_schema.upper()
