@@ -19,6 +19,7 @@ BEGIN
 
   -- Get table name
   v_table_name := fw.f_unify_name(p_name := p_table_name);
+  
 
   perform fw.f_write_log(
      p_log_type := 'SERVICE', 

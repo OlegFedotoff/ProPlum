@@ -1,0 +1,7 @@
+[
+    {
+        "migration": "f_analyze_table(text).sql",
+        "rollback": "",
+        "source": "functions"
+    }
+]
