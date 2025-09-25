@@ -356,3 +356,6 @@ project/media/
 
 ### source files
 source/**/cache
+
+### Cursor IDE
+.cursor/
