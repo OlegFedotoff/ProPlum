@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "create_f_load_scd2.sql",
+        "rollback": "rollback_f_load_scd2.sql"
+    }
+]

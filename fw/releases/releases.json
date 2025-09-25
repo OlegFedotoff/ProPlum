@@ -43,5 +43,10 @@
         "code": "000009",
         "name": "change komus_devops",
         "comment": "Created from change dvs65_0"
+    },
+    {
+        "code": "000010",
+        "name": "Создание функции fw.f_load_scd2",
+        "comment": "Created from change kglazova_0"
     }
 ]

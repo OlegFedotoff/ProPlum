@@ -1,0 +1,1 @@
+drop function fw.f_load_scd2;
