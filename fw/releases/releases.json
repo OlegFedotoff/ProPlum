@@ -48,5 +48,10 @@
         "code": "000010",
         "name": "Создание функции fw.f_load_scd2",
         "comment": "Created from change kglazova_0"
+    },
+    {
+        "code": "000011",
+        "name": "Создание внешней таблицы objects_log_pg (таблица objects_log находится на сервере posrgesql)",
+        "comment": "Для простмотра изменений таблицы objects"
     }
 ]
