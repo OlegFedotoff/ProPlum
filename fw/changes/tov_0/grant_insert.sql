@@ -1,0 +1,1 @@
+grant select, insert on fw.objects_log to role_data_loader;

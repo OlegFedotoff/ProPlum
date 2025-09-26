@@ -87,3 +87,4 @@ COMMENT ON COLUMN fw.objects_log.change_timestamp IS 'Метка времени 
 COMMENT ON COLUMN fw.objects_log.change_username IS 'Пользователь, изменивший запись';
 
 
+grant select, insert on fw.objects_log to role_data_loader;
