@@ -154,6 +154,7 @@ class Handler(object):
         check_role_sql = "SELECT 1 FROM pg_roles WHERE rolname = %s"
         self.error_text, role_exists = self.db.get_first_row(check_role_sql, [owner_role])
         if not self.error_text and role_exists:
+            print("SET ROLE", owner_role)
             self.error_text = self.db.execute(f"SET ROLE {owner_role}")
             if self.error_text:
                 print("!!! Failed to set owner role:", self.error_text)
@@ -354,6 +355,128 @@ class Handler(object):
         return yaml_style
 
     ##########################################################  
+    def process_yaml_fw_object(self, yaml_data, env):
+        """Обработка YAML файла типа fw_object"""
+        try:
+            import yaml as yaml_lib
+            
+            # Парсим YAML
+            parsed_data = yaml_lib.safe_load(yaml_data)
+            
+            if not isinstance(parsed_data, dict):
+                self.error_text = "Invalid YAML format: expected dictionary structure"
+                return False
+                
+            yaml_type = parsed_data.get('type')
+            if yaml_type != 'fw_object':
+                self.error_text = f"Unsupported YAML type: {yaml_type}"
+                return False
+                
+            params = parsed_data.get('params', {})
+            
+            # Собираем параметры для текущей среды
+            final_params = {}
+            
+            # Сначала берем общие параметры
+            if 'all' in params:
+                final_params.update(params['all'])
+                
+            # Затем переопределяем специфичными для среды
+            if env and env in params:
+                final_params.update(params[env])
+                
+            # Формируем объект для процедуры fw.f_save_object
+            if not final_params:
+                self.error_text = "No parameters found for environment " + str(env)
+                return False
+                
+            # Вызываем процедуру fw.f_save_object
+            success = self.call_fw_save_object(final_params)
+            # Логируем как отдельное действие, чтобы считать количество исполненных команд
+            object_name = str(final_params.get('object_name', 'unknown'))
+            description = f"Executing FW_OBJECT {object_name}"
+            self._sql_logging(
+                object_type="FW_OBJECT",
+                object_schema="",
+                object_name=object_name,
+                description=description,
+                error_text0=("" if success else (self.error_text or "Execution error"))
+            )
+            return success
+            
+        except Exception as e:
+            self.error_text = f"Error processing YAML fw_object: {e}"
+            return False
+    
+    ##########################################################  
+    def call_fw_save_object(self, params):
+        """Вызов процедуры fw.f_save_object с параметрами"""
+        try:
+            # Формируем SQL для вызова процедуры
+            # Создаем строку параметров для ROW конструктора
+            param_values = []
+            param_names = [
+                'object_id', 'object_name', 'object_desc', 'extraction_type', 'load_type',
+                'merge_key', 'delta_field', 'delta_field_format', 'delta_safety_period',
+                'bdate_field', 'bdate_field_format', 'bdate_safety_period', 'load_method',
+                'job_name', 'responsible_mail', 'priority', 'periodicity', 'load_interval',
+                'activitystart', 'activityend', 'active', 'load_start_date', 'delta_start_date',
+                'delta_mode', 'connect_string', 'load_function_name', 'where_clause',
+                'load_group', 'src_date_type', 'src_ts_type', 'column_name_mapping',
+                'transform_mapping', 'delta_field_type', 'bdate_field_type', 'param_list'
+            ]
+            
+            for param_name in param_names:
+                value = params.get(param_name)
+                if value is None:
+                    param_values.append('NULL')
+                elif isinstance(value, bool):
+                    param_values.append('TRUE' if value else 'FALSE')
+                elif isinstance(value, (int, float)):
+                    param_values.append(str(value))
+                elif isinstance(value, list):
+                    # Для массивов
+                    if param_name in ['merge_key', 'responsible_mail']:
+                        array_str = "ARRAY[" + ",".join(f"'{item}'" for item in value) + "]"
+                        param_values.append(array_str)
+                    else:
+                        param_values.append(f"'{str(value)}'")
+                elif isinstance(value, dict):
+                    # Для JSON полей
+                    import json
+                    json_str = json.dumps(value).replace("'", "''")
+                    param_values.append(f"'{json_str}'::jsonb")
+                else:
+                    # Для строк и прочих типов
+                    str_value = str(value).replace("'", "''")
+                    if param_name in ['delta_safety_period', 'bdate_safety_period', 'periodicity', 'load_interval']:
+                        param_values.append(f"'{str_value}'::interval")
+                    elif param_name in ['activitystart', 'activityend']:
+                        param_values.append(f"'{str_value}'::time")
+                    elif param_name in ['load_start_date', 'delta_start_date']:
+                        param_values.append(f"'{str_value}'::timestamp")
+                    else:
+                        param_values.append(f"'{str_value}'")
+            
+            # Формируем SQL
+            row_constructor = f"ROW({','.join(param_values)})"
+            sql = f"SELECT fw.f_save_object({row_constructor}::fw.objects)"
+            
+            print(" "*8, f"Calling fw.f_save_object for object {params.get('object_name', 'unknown')}")
+            
+            # Выполняем SQL
+            error_text = self.db.execute(sql)
+            if error_text:
+                self.error_text = f"Error calling fw.f_save_object: {error_text}"
+                return False
+                
+            return True
+            
+        except Exception as e:
+            self.error_text = f"Error in call_fw_save_object: {e}"
+            return False
+
+    ##########################################################  
     def migrate_file(self, migration, release_dir, cont=False):
         print(" "*6 + "Processing " + migration["migration"])
 
@@ -408,8 +531,12 @@ class Handler(object):
 
 
 
+        # Check if this is a YAML file by extension
+        file_extension = os.path.splitext(filename)[1].lower()
+        is_yaml_file = file_extension in ['.yaml', '.yml']
+        
         # Check if this is a new format file (YAML-style with environment sections)
-        yaml_style = self.is_yaml_style_format(migration_data)
+        yaml_style = self.is_yaml_style_format(migration_data) if not is_yaml_file else False
 
 
         if rollback_filename:
@@ -428,7 +555,54 @@ class Handler(object):
 
         self._insert_migration(migration, migration_data, rollback_data)
 
-        if yaml_style:
+        if is_yaml_file:
+            # Обработка YAML файла
+            import yaml
+            
+            try:
+                parsed_data = yaml.safe_load(migration_data)
+                
+                if not isinstance(parsed_data, dict):
+                    self.error_text = "Invalid YAML format: expected dictionary structure"
+                    print(" "*6 + "!!! " + self.error_text)
+                    return False
+                    
+                yaml_type = parsed_data.get('type')
+                
+                if yaml_type == 'sql':
+                    # Обработка YAML файла с SQL командами
+                    params = parsed_data.get('params', {})
+                    
+                    # Выполняем секции в порядке: all, затем специфичная для среды
+                    sections_to_execute = []
+                    if 'all' in params:
+                        sections_to_execute.append(('all', params['all']))
+                    if self.env and self.env in params:
+                        sections_to_execute.append((self.env, params[self.env]))
+                    
+                    for section_name, section_content in sections_to_execute:
+                        if section_content and str(section_content).strip():
+                            print(" "*6 + f"Executing YAML section: {section_name}")
+                            if not self.migrate_data(str(section_content).strip(), when_exists, when_error):
+                                return False
+                                
+                elif yaml_type == 'fw_object':
+                    # Обработка YAML файла с объектом fw.objects
+                    if not self.process_yaml_fw_object(migration_data, self.env):
+                        print(" "*6 + "!!! " + self.error_text)
+                        return False
+                        
+                else:
+                    self.error_text = f"Unsupported YAML type: {yaml_type}"
+                    print(" "*6 + "!!! " + self.error_text)
+                    return False
+                    
+            except yaml.YAMLError as e:
+                self.error_text = f"Error parsing YAML data: {e}"
+                print(" "*6 + "!!! " + self.error_text)
+                return False
+
+        elif yaml_style:
             # Parse YAML-style migration data using yaml library
             import yaml
             

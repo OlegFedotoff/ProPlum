@@ -11,3 +11,4 @@ from .encodingconfig import *
 from .newchange import *
 from .apply import *
 from .rollbackchange import *
+from .copyobject import *

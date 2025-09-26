@@ -189,7 +189,6 @@ class Database(object):
         if description == "Empty sql":  
             return object_type, object_schema, object_name, description, ""
 
-
         if self.db_type == "ORCL":
             object_schema = object_schema.upper()
             object_name = object_name.upper()
@@ -214,7 +213,7 @@ class Database(object):
 
         if not skip:
 
-            # replace external_connect for external table 
+            # replace external_connect for external/foreign table 
             # connect to opposite db
             if object_type == "TABLE":
                 if env.lower() == "prod":
@@ -389,6 +388,7 @@ def get_sql_info(sql):
     create_external_table_pattern = re.compile(r"^[\s]*CREATE[\s]+EXTERNAL[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     create_readable_external_table_pattern = re.compile(r"^[\s]*CREATE[\s]+READABLE[\s]+EXTERNAL[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     create_writable_external_table_pattern = re.compile(r"^[\s]*CREATE[\s]+WRITABLE[\s]+EXTERNAL[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
+    create_foreign_table_pattern = re.compile(r"^[\s]*CREATE[\s]+FOREIGN[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     search_obj = create_pattern.search(sql)
     if search_obj:
         object_type = search_obj.group(1).upper()
@@ -425,6 +425,11 @@ def get_sql_info(sql):
             if search_obj2:
                 object_type = 'TABLE'
                 object_name = search_obj2.group(1)
+        elif object_type_upper == 'FOREIGN' and object_name_upper == 'TABLE':
+            search_obj2 = create_foreign_table_pattern.search(sql)
+            if search_obj2:
+                object_type = 'TABLE'
+                object_name = search_obj2.group(1)
         names = object_name.split('.')
         if len(names) == 1:
             object_schema = ''
@@ -437,6 +442,7 @@ def get_sql_info(sql):
     alter_pattern = re.compile(r"^[\s]*ALTER[\s]+([A-Z]+)[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     alter_materialized_view_pattern = re.compile(r"^[\s]*ALTER[\s]+MATERIALIZED[\s]+VIEW[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     alter_external_table_pattern = re.compile(r"^[\s]*ALTER[\s]+EXTERNAL[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
+    alter_foreign_table_pattern = re.compile(r"^[\s]*ALTER[\s]+FOREIGN[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     search_obj = alter_pattern.search(sql)
     if search_obj:
         object_type = search_obj.group(1)
@@ -453,6 +459,11 @@ def get_sql_info(sql):
             if search_obj2:
                 object_type = 'TABLE'
                 object_name = search_obj2.group(1)
+        elif object_type_upper == 'FOREIGN' and object_name_upper == 'TABLE':
+            search_obj2 = alter_foreign_table_pattern.search(sql)
+            if search_obj2:
+                object_type = 'TABLE'
+                object_name = search_obj2.group(1)
         names = object_name.split('.')
         if len(names) == 1:
             object_schema = ''
@@ -465,6 +476,7 @@ def get_sql_info(sql):
     drop_pattern = re.compile(r"^[\s]*DROP[\s]+[\s]*([A-Z]+)[\s]+[\s]*([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     drop_materialized_view_pattern = re.compile(r"^[\s]*DROP[\s]+MATERIALIZED[\s]+VIEW[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     drop_external_table_pattern = re.compile(r"^[\s]*DROP[\s]+EXTERNAL[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
+    drop_foreign_table_pattern = re.compile(r"^[\s]*DROP[\s]+FOREIGN[\s]+TABLE[\s]+([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     drop_if_exists_pattern = re.compile(r"^[\s]*DROP[\s]+[\s]*([A-Z]+)[\s]+[\s]*IF[\s]+EXISTS[\s]+[\s]*([a-zA-Z0-9_$.]+)", re.IGNORECASE)
     search_obj = drop_pattern.search(sql)
     if search_obj:
@@ -479,6 +491,11 @@ def get_sql_info(sql):
                 object_name = search_obj2.group(1)
         elif object_type_upper == 'EXTERNAL' and object_name_upper == 'TABLE':
             search_obj2 = drop_external_table_pattern.search(sql)
+            if search_obj2:
+                object_type = 'TABLE'
+                object_name = search_obj2.group(1)
+        elif object_type_upper == 'FOREIGN' and object_name_upper == 'TABLE':
+            search_obj2 = drop_foreign_table_pattern.search(sql)
             if search_obj2:
                 object_type = 'TABLE'
                 object_name = search_obj2.group(1)

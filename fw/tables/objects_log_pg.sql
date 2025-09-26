@@ -1,5 +1,5 @@
 all: |
-    DROP TABLE fw.objects_log_pg cascade;
+    DROP FOREIGN TABLE fw.objects_log_pg cascade;
 dev: |
     CREATE FOREIGN TABLE fw.objects_log_pg 
     ( object_id int8 NOT NULL, object_name text NOT NULL, object_desc text NULL, 

@@ -358,6 +358,10 @@ def create_access_pattern(db, set, db_name):
     if error_text:
         print(f"  !!! Error granting {role_rw} TO {user_writer}: " + error_text)
         return False, user_reader, user_writer
+    error_text = db.execute(f"GRANT role_ml_ro TO {role_owner}")
+    if error_text:
+        print(f"  !!! Error granting role_ml_ro TO {role_owner}: " + error_text)
+        return False, user_reader, user_writer
 
 
 

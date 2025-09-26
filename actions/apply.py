@@ -163,15 +163,46 @@ def _execute_change_migration(db, migration, change_path, handler, cont, set_dir
     when_error = "continue" if cont else "break"
     when_exists = "skip" if cont else "error"
     
-    # Check if this is a new format file (YAML-style with environment sections)
-    yaml_style = handler.is_yaml_style_format(migration_data)
+    # Detect YAML by extension or content style
+    is_yaml_ext = file_extension in [".yaml", ".yml"]
+    yaml_style = handler.is_yaml_style_format(migration_data) if not is_yaml_ext else False
 
     # Set owner role for current schema in GP database
     if not handler.set_owner_role():
         return False
 
     
-    if yaml_style:
+    if is_yaml_ext:
+        # Parse typed YAML (type: sql | fw_object)
+        import yaml
+        try:
+            parsed = yaml.safe_load(migration_data)
+            if not isinstance(parsed, dict):
+                print("    " + "!!! Invalid YAML: expected mapping at root")
+                return False
+            y_type = (parsed.get('type') or '').strip()
+            params = parsed.get('params', {}) or {}
+            if y_type == 'sql':
+                # Execute sections: all then dev
+                seq = []
+                if 'all' in params: seq.append(('all', params.get('all')))
+                if 'dev' in params: seq.append(('dev', params.get('dev')))
+                for sec, content in seq:
+                    if content and str(content).strip():
+                        if not _execute_change_data_section(db, str(content).strip(), when_exists, when_error, handler):
+                            return False
+            elif y_type == 'fw_object':
+                # Delegate to handler's YAML processor to call fw.f_save_object
+                if not handler.process_yaml_fw_object(migration_data, 'dev'):
+                    print("    " + f"!!! {handler.error_text}")
+                    return False
+            else:
+                print("    " + f"!!! Unsupported YAML type: {y_type}")
+                return False
+        except yaml.YAMLError as e:
+            print("    " + f"!!! YAML parse error: {e}")
+            return False
+    elif yaml_style:
         # Parse YAML-style migration data using yaml library
         import yaml
         
@@ -187,7 +218,6 @@ def _execute_change_migration(db, migration, change_path, handler, cont, set_dir
                                     ('dev' in [env.strip().lower() for env in section_name.split(',')]))
                     
                     if should_execute and section_content and str(section_content).strip():
-                        print("    " + f"Executing section: {section_name}")
                         if not _execute_change_data_section(db, str(section_content).strip(), when_exists, when_error, handler):
                             return False
             else:
