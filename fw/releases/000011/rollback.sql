@@ -1,1 +1,0 @@
-DROP TABLE fw.objects_log_pg cascade;

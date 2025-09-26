@@ -1,6 +1,7 @@
 [
     {
-        "migration": "create.sql",
-        "rollback": "rollback.sql"
+        "migration": "objects_log_pg.sql",
+        "source": "tables",
+        "rollback": ""
     }
 ]
