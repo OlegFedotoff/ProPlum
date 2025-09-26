@@ -1,0 +1,1 @@
+ drop function fw.f_save_object(fw.objects);
