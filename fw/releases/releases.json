@@ -53,5 +53,10 @@
         "code": "000011",
         "name": "Создание внешней таблицы objects_log_pg (таблица objects_log находится на сервере posrgesql)",
         "comment": "Для простмотра изменений таблицы objects"
+    },
+    {
+        "code": "000012",
+        "name": "",
+        "comment": "Created from change tov_0"
     }
 ]

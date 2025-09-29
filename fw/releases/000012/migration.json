@@ -6,11 +6,11 @@
     {
         "migration": "f_save_object_core(fw.objects).sql",
         "source": "functions",
-        "rollback": "drop_f_save_object_core(fw.objects).sql"
+        "rollback": ""
     },
     {
         "migration": "f_save_object(fw.objects).sql",
         "source": "functions",
-        "rollback": "drop_f_save_object(fw.objects).sql"
+        "rollback": ""
     }
 ]
