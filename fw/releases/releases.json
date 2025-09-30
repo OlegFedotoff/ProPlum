@@ -63,5 +63,10 @@
         "code": "000013",
         "name": " DWH-40076",
         "comment": "add new dq check for object_id 1064 and 1063"
+    },
+    {
+        "code": "000014",
+        "name": "DWH-40134",
+        "comment": "Created from change agb_0"
     }
 ]
