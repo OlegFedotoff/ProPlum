@@ -8,5 +8,10 @@
         "migration": "f_set_load_id_success_direct(int8).sql",
         "source": "functions",
         "rollback": ""
+    },
+    {
+        "migration": "f_set_load_id_in_process_direct(int8).sql",
+        "source": "functions",
+        "rollback": ""
     }
 ]
