@@ -3,5 +3,10 @@
         "migration": "f_gen_load_id_secure(int8,timestamp,timestamp,text,text,text,interval,timestamp,timestamp).sql",
         "source": "functions",
         "rollback": ""
+    },
+    {
+        "migration": "f_set_load_id_success_direct(int8).sql",
+        "source": "functions",
+        "rollback": ""
     }
 ]
