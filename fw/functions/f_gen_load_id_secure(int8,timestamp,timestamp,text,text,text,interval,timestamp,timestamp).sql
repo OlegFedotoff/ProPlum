@@ -19,8 +19,6 @@ AS $$
 DECLARE
     v_res int8;
 BEGIN
-    PERFORM set_config('search_path','fw,pg_temp',true);
-
     v_res := fw.f_gen_load_id(
         p_object_id      := p_object_id,
         p_start_extr     := p_start_extr,
