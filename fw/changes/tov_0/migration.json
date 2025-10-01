@@ -1,5 +1,20 @@
 [
     {
+        "migration": "load_results_id_seq.sql",
+        "source": "sequences",
+        "rollback": ""
+    },
+    {
+        "migration": "load_results.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "f_write_load_result(int8,int8,text,int8,int8,timestamp,timestamp,text,text,text).sql",
+        "source": "functions",
+        "rollback": ""
+    },
+    {
         "migration": "f_gen_load_id_secure(int8,timestamp,timestamp,text,text,text,interval,timestamp,timestamp).sql",
         "source": "functions",
         "rollback": ""
