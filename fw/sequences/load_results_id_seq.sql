@@ -9,6 +9,6 @@ CREATE SEQUENCE fw.load_results_id_seq
 	START 1
 	NO CYCLE;
 
-GRANT USAGE, SELECT ON SEQUENCE fw.load_results_id_seq TO role_data_loader;
+GRANT ALL ON SEQUENCE fw.load_results_id_seq TO role_data_loader;
 
 

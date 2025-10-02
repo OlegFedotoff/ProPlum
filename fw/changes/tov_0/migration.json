@@ -15,17 +15,12 @@
         "rollback": ""
     },
     {
-        "migration": "f_gen_load_id_secure(int8,timestamp,timestamp,text,text,text,interval,timestamp,timestamp).sql",
+        "migration": "f_get_load_id_new_or_inproc(int8,date,date).sql",
         "source": "functions",
         "rollback": ""
     },
     {
-        "migration": "f_set_load_id_success_direct(int8).sql",
-        "source": "functions",
-        "rollback": ""
-    },
-    {
-        "migration": "f_set_load_id_in_process_direct(int8).sql",
+        "migration": "f_gen_load_id_dblink(int8,timestamp,timestamp,text,text,text,interval,timestamp,timestamp).sql",
         "source": "functions",
         "rollback": ""
     }
