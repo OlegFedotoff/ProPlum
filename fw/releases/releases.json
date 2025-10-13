@@ -78,5 +78,10 @@
         "code": "000016",
         "name": "DWH-40402",
         "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000017",
+        "name": "DWH-40395 Выключение рассчета поля is_robot30",
+        "comment": "Created from change dvs65_0"
     }
 ]
