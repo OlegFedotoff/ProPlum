@@ -44,11 +44,31 @@ def copy_object(db: Database, object_id=None, object_name=None, env_list=None):
             continue
             
         # Формируем SQL запрос
+        # ВАЖНО: interval-поля получаем как ::text, чтобы сохранить месяцы/годы
+        # иначе psycopg2 преобразует '1 mon' в timedelta(days=30), теряя семантику!
         if object_id:
-            sql = "SELECT * FROM fw.objects WHERE object_id = %s"
+            sql = """SELECT 
+                object_id, object_name, object_desc, extraction_type, load_type,
+                merge_key, delta_field, delta_field_format, delta_safety_period::text as delta_safety_period,
+                bdate_field, bdate_field_format, bdate_safety_period::text as bdate_safety_period, load_method,
+                job_name, responsible_mail, priority, periodicity::text as periodicity, load_interval::text as load_interval,
+                activitystart, activityend, active, load_start_date, delta_start_date,
+                delta_mode, connect_string, load_function_name, where_clause,
+                load_group, src_date_type, src_ts_type, column_name_mapping,
+                transform_mapping, delta_field_type, bdate_field_type, param_list
+            FROM fw.objects WHERE object_id = %s"""
             params = [object_id]
         else:
-            sql = "SELECT * FROM fw.objects WHERE object_name = %s"
+            sql = """SELECT 
+                object_id, object_name, object_desc, extraction_type, load_type,
+                merge_key, delta_field, delta_field_format, delta_safety_period::text as delta_safety_period,
+                bdate_field, bdate_field_format, bdate_safety_period::text as bdate_safety_period, load_method,
+                job_name, responsible_mail, priority, periodicity::text as periodicity, load_interval::text as load_interval,
+                activitystart, activityend, active, load_start_date, delta_start_date,
+                delta_mode, connect_string, load_function_name, where_clause,
+                load_group, src_date_type, src_ts_type, column_name_mapping,
+                transform_mapping, delta_field_type, bdate_field_type, param_list
+            FROM fw.objects WHERE object_name = %s"""
             params = [object_name]
             
         error_text, row = env_db.get_first_row(sql, params)
@@ -75,11 +95,18 @@ def copy_object(db: Database, object_id=None, object_name=None, env_list=None):
         
         def _format_interval_hhmmss(val):
             try:
-                # timedelta
+                # Теперь val приходит как текст (через ::text в SQL), не как timedelta
+                s = str(val) if val is not None else ''
+                
+                # Если в формате с mon/year - возвращаем как есть (НЕ преобразуем месяцы в дни!)
+                if re.search(r'\b(mon|year)', s, re.IGNORECASE):
+                    return s
+                
+                # timedelta - только если НЕТ месяцев/годов (для обратной совместимости)
                 if hasattr(val, 'total_seconds'):
                     total_seconds = int(val.total_seconds())
                 else:
-                    s = str(val) if val is not None else ''
+                    
                     # HH:MM:SS
                     m = re.match(r'^\s*(\d+):([0-5]\d):([0-5]\d)\s*$', s)
                     if m:
@@ -106,10 +133,22 @@ def copy_object(db: Database, object_id=None, object_name=None, env_list=None):
                                         total_seconds = int(m.group(1))
                                     else:
                                         return s if s != '' else None
-                hours = total_seconds // 3600
-                minutes = (total_seconds % 3600) // 60
-                seconds = total_seconds % 60
-                return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                # Преобразуем в формат, понятный PostgreSQL interval
+                days = total_seconds // 86400
+                remaining_seconds = total_seconds % 86400
+                hours = remaining_seconds // 3600
+                minutes = (remaining_seconds % 3600) // 60
+                seconds = remaining_seconds % 60
+                
+                if days > 0:
+                    # Для интервалов >= 1 дня используем формат "X days HH:MM:SS"
+                    if hours == 0 and minutes == 0 and seconds == 0:
+                        return f"{days} days"
+                    else:
+                        return f"{days} days {hours:02d}:{minutes:02d}:{seconds:02d}"
+                else:
+                    # Для интервалов < 1 дня используем формат HH:MM:SS
+                    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
             except Exception:
                 return str(val) if val is not None else None
 

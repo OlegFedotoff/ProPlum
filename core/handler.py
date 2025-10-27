@@ -154,7 +154,6 @@ class Handler(object):
         check_role_sql = "SELECT 1 FROM pg_roles WHERE rolname = %s"
         self.error_text, role_exists = self.db.get_first_row(check_role_sql, [owner_role])
         if not self.error_text and role_exists:
-            print("SET ROLE", owner_role)
             self.error_text = self.db.execute(f"SET ROLE {owner_role}")
             if self.error_text:
                 print("!!! Failed to set owner role:", self.error_text)
@@ -411,7 +410,55 @@ class Handler(object):
     ##########################################################  
     def call_fw_save_object(self, params):
         """Вызов процедуры fw.f_save_object с параметрами"""
+        
+        def normalize_interval(interval_str):
+            """
+            Нормализует формат интервала для PostgreSQL.
+            Принимает: '720:00:00', '72:00:00', '24:00:00', '12:30:00', '30 days' и т.д.
+            Возвращает: PostgreSQL-совместимый формат ('30 days', '3 days', '12:30:00')
+            """
+            if not interval_str or interval_str == '':
+                return interval_str
+            
+            import re
+            s = str(interval_str).strip()
+            
+            # Если уже в формате с days/months/years - оставляем как есть
+            if re.search(r'\b(day|mon|year)', s, re.IGNORECASE):
+                return s
+            
+            # Пробуем распарсить формат HH:MM:SS или HHH:MM:SS (с любым количеством цифр в часах)
+            m = re.match(r'^(\d+):([0-5]\d):([0-5]\d)$', s)
+            if m:
+                hours = int(m.group(1))
+                minutes = int(m.group(2))
+                seconds = int(m.group(3))
+                
+                total_seconds = hours * 3600 + minutes * 60 + seconds
+                days = total_seconds // 86400
+                remaining_seconds = total_seconds % 86400
+                h = remaining_seconds // 3600
+                m = (remaining_seconds % 3600) // 60
+                sec = remaining_seconds % 60
+                
+                if days > 0:
+                    if h == 0 and m == 0 and sec == 0:
+                        return f"{days} days"
+                    else:
+                        return f"{days} days {h:02d}:{m:02d}:{sec:02d}"
+                else:
+                    return f"{h:02d}:{m:02d}:{sec:02d}"
+            
+            # Если не распарсилось - возвращаем как есть
+            return s
+        
         try:
+            # Нормализуем интервальные поля перед обработкой
+            interval_fields = ['delta_safety_period', 'bdate_safety_period', 'periodicity', 'load_interval']
+            for field in interval_fields:
+                if field in params and params[field] is not None:
+                    params[field] = normalize_interval(params[field])
+            
             # Формируем SQL для вызова процедуры
             # Создаем строку параметров для ROW конструктора
             param_values = []
