@@ -1,0 +1,10 @@
+[
+    {
+        "migration": "delete_dependencies.sql",
+        "rollback": "rollback_delete_dependencies.sql"
+    },
+    {
+        "migration": "update_objects.sql",
+        "rollback": "rollback_update_objects.sql"
+    }
+]

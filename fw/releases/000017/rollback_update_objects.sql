@@ -1,0 +1,1 @@
+update fw.objects set active = true where object_id in (606, 614);
