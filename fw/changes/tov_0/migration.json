@@ -23,5 +23,10 @@
         "migration": "f_gen_load_id_dblink(int8,timestamp,timestamp,text,text,text,interval,timestamp,timestamp).sql",
         "source": "functions",
         "rollback": ""
+    },
+    {
+        "migration": "f_create_date_partitions_sd(text,timestamp).sql",
+        "source": "functions",
+        "rollback": ""
     }
 ]
