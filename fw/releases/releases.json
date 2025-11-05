@@ -88,5 +88,10 @@
         "code": "000018",
         "name": "DWH-41135 Добавление часового пояса UTC к дефолтным значениям полей created_dttm и updated_dttm в таблице load_info",
         "comment": ""
+    },
+    {
+        "code": "000019",
+        "name": "",
+        "comment": "Created from change tov_0"
     }
 ]
