@@ -142,7 +142,7 @@ BEGIN
      from fw.objects ob
     where ob.object_id = p_object_id;
   -- prepare start and end dates for load_load_interval dates
-       IF v_extraction_type = 'FULL' AND upper(v_load_method) = 'PXF'
+       IF v_extraction_type = 'FULL' AND upper(v_load_method) IN ('PXF','DBT')
            AND v_delta_field is not null 
            --================================================
            
@@ -164,7 +164,7 @@ BEGIN
            --  v_start_date := case when v_bdate_safety_period in ('day','month','year')
            --                       then date_trunc(v_bdate_safety_period,current_date) else current_date end - v_load_interval::interval;
            --  v_end_date := current_date;
-        ELSIF v_extraction_type = 'FULL' AND upper(v_load_method) = 'PXF'
+        ELSIF v_extraction_type = 'FULL' AND upper(v_load_method) IN ('PXF','DBT')
            AND v_delta_field is null
             THEN
              v_start_date := DATE_TRUNC('day', v_start_date);
