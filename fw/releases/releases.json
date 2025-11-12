@@ -103,5 +103,10 @@
         "code": "000021",
         "name": "DWH-41758",
         "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000022",
+        "name": "DWH-39885 Изменение групп загрузки объектов с ADWH на ECOM",
+        "comment": "Created from change dvs65_1"
     }
 ]
