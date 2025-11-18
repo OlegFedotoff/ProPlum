@@ -1,5 +1,33 @@
 [
     {
+        "migration": "create.sql",
+        "rollback": ""
+    },
+    {
+        "migration": "odata_query_helper.sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_get_table_count(text).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_process_date_string(text).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_process_extract_odata(int8).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_post_extract_odata(int8).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_prepare_extract_odata(int8).sql",
+        "rollback": ""
+    },
+    {
         "migration": "f_create_ext_table(text,int8,text,text,text,text,text,bool).sql",
         "rollback": ""
     },
