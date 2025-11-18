@@ -1,0 +1,14 @@
+[
+    {
+        "migration": "f_create_ext_table(text,int8,text,text,text,text,text,bool).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "f_get_connection_string(int8,bool,text).sql",
+        "rollback": ""
+    },
+    {
+        "migration": "v_odata_query_helper.sql",
+        "rollback": ""
+    }
+]
