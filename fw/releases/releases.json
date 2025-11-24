@@ -113,5 +113,10 @@
         "code": "000023",
         "name": "",
         "comment": ""
+    },
+    {
+        "code": "000024",
+        "name": "Добавление логирования поля param_list",
+        "comment": "Created from change vv_0"
     }
 ]

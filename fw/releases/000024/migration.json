@@ -1,0 +1,14 @@
+[
+    {
+        "migration": "alter_objects_log_pg.sql",
+        "rollback": "rollback_objects_log_pg.sql"
+    },
+    {
+        "migration": "alter_objects_log.sql",
+        "rollback": "rollback_objects_log.sql"
+    },
+    {
+        "migration": "alter_f_save_object.sql",
+        "rollback": "rollback_f_save_object.sql"
+    }
+]
