@@ -84,6 +84,10 @@ def main(args):
         actions.apply(db=db, set=set_name, cont=args.cont, env=args.env)
     elif action == "rollbackchange":
         actions.rollback_change(db=db, set=set_name, cont=args.cont)
+    elif action == "copyobject":
+        actions.copy_object(db=db, object_id=args.id, object_name=args.name, env_list=args.envlist)
+    elif action == "copy_ext_tab_par":
+        actions.copy_ext_tables_params(db=db, object_id=args.id, env_list=args.envlist)
     elif action == "version":
         actions.version()
         return
@@ -102,7 +106,7 @@ def main(args):
 if __name__== "__main__":
     parser = argparse.ArgumentParser(description='DB realese manager')
     parser.add_argument('action', type=str, help='Action', 
-                        choices=["createset","newrelease","newcorerelease","migrate","migratecore","rollback","sets","releases","migrations","version","movereleases","configureencoding","newchange","apply","rollbackchange"])
+                        choices=["createset","newrelease","newcorerelease","migrate","migratecore","rollback","sets","releases","migrations","version","movereleases","configureencoding","newchange","apply","rollbackchange","copyobject","copy_ext_tab_par"])
     parser.add_argument('-s', metavar='repositary-name', dest="set", type=str, help='Repositary Name (optional, uses current git branch if not specified)')
     parser.add_argument('-e', metavar='dev|test|prod', dest="env", type=str, help='Enviroment', choices=["dev", "test", "prod"], default="dev")
     parser.add_argument('-start', metavar='version', type=str, help='Start release version', default="")
@@ -110,5 +114,14 @@ if __name__== "__main__":
     parser.add_argument('-l', '--level', metavar='level', type=int, dest="level", help='Detail level', default=0, choices=[0,1,2])
     parser.add_argument('-code', metavar='release-code', type=str, help='Release code', default="")
     parser.add_argument('-id', metavar='release-id', type=int, help='Release ID', default=0)
+    parser.add_argument('-name', metavar='object-name', type=str, help='Object name for copyobject', default="")
+    parser.add_argument('-envlist', metavar='env1,env2', type=str, help='Environment list for copyobject (comma-separated)', default="dev,prod")
     args = parser.parse_args()
+    
+    # Преобразуем строку envlist в список
+    if hasattr(args, 'envlist') and args.envlist:
+        args.envlist = [env.strip() for env in args.envlist.split(',')]
+    else:
+        args.envlist = ['dev', 'prod']
+    
     main(args)

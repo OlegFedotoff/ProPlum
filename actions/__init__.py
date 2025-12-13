@@ -12,3 +12,4 @@ from .newchange import *
 from .apply import *
 from .rollbackchange import *
 from .copyobject import *
+from .copy_ext_tab_par import *

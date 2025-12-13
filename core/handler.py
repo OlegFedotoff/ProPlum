@@ -408,6 +408,102 @@ class Handler(object):
             return False
     
     ##########################################################  
+    def process_yaml_fw_ext_tables_params(self, yaml_data, env=None):
+        """Обработка YAML файла типа fw_ext_tables_params"""
+        try:
+            import yaml as yaml_lib
+            
+            # Парсим YAML
+            parsed_data = yaml_lib.safe_load(yaml_data)
+            
+            if not isinstance(parsed_data, dict):
+                self.error_text = "Invalid YAML format: expected dictionary structure"
+                return False
+                
+            yaml_type = parsed_data.get('type')
+            if yaml_type != 'fw_ext_tables_params':
+                self.error_text = f"Unsupported YAML type: {yaml_type}"
+                return False
+                
+            params = parsed_data.get('params', {})
+            
+            # Собираем параметры для текущей среды
+            final_params = {}
+            
+            # Сначала берем общие параметры
+            if 'all' in params:
+                final_params.update(params['all'])
+                
+            # Затем переопределяем специфичными для среды
+            if env and env in params:
+                final_params.update(params[env])
+                
+            # Формируем объект для процедуры fw.f_save_ext_tables_params
+            if not final_params:
+                self.error_text = "No parameters found for environment " + str(env)
+                return False
+                
+            # Вызываем процедуру fw.f_save_ext_tables_params
+            success = self.call_fw_save_ext_tables_params(final_params)
+            # Логируем как отдельное действие, чтобы считать количество исполненных команд
+            object_id = str(final_params.get('object_id', 'unknown'))
+            load_method = str(final_params.get('load_method', 'unknown'))
+            description = f"Executing FW_EXT_TABLES_PARAMS object_id={object_id}, load_method={load_method}"
+            self._sql_logging(
+                object_type="FW_EXT_TABLES_PARAMS",
+                object_schema="",
+                object_name=f"{object_id}_{load_method}",
+                description=description,
+                error_text0=("" if success else (self.error_text or "Execution error"))
+            )
+            return success
+            
+        except Exception as e:
+            self.error_text = f"Error processing YAML fw_ext_tables_params: {e}"
+            return False
+    
+    ##########################################################  
+    def call_fw_save_ext_tables_params(self, params):
+        """Вызов процедуры fw.f_save_ext_tables_params с параметрами"""
+        
+        try:
+            # Формируем SQL для вызова процедуры
+            # Создаем строку параметров для ROW конструктора
+            param_values = []
+            param_names = ['object_id', 'load_method', 'connection_string', 'additional', 'active']
+            
+            for param_name in param_names:
+                value = params.get(param_name)
+                if value is None:
+                    param_values.append('NULL')
+                elif isinstance(value, bool):
+                    param_values.append('TRUE' if value else 'FALSE')
+                elif isinstance(value, (int, float)):
+                    param_values.append(str(value))
+                else:
+                    # Для строк
+                    str_value = str(value).replace("'", "''")
+                    param_values.append(f"'{str_value}'")
+            
+            # Формируем SQL
+            row_constructor = f"ROW({','.join(param_values)})"
+            sql = f"SELECT fw.f_save_ext_tables_params({row_constructor}::fw.ext_tables_params)"
+            
+            print(" "*8, f"Calling fw.f_save_ext_tables_params for object_id={params.get('object_id', 'unknown')}, load_method={params.get('load_method', 'unknown')}")
+            
+            # Выполняем SQL
+            error_text = self.db.execute(sql)
+            if error_text:
+                self.error_text = f"Error calling fw.f_save_ext_tables_params: {error_text}"
+                return False
+                
+            return True
+            
+        except Exception as e:
+            self.error_text = f"Error in call_fw_save_ext_tables_params: {e}"
+            return False
+
+    ##########################################################  
     def call_fw_save_object(self, params):
         """Вызов процедуры fw.f_save_object с параметрами"""
         
@@ -636,6 +732,12 @@ class Handler(object):
                 elif yaml_type == 'fw_object':
                     # Обработка YAML файла с объектом fw.objects
                     if not self.process_yaml_fw_object(migration_data, self.env):
+                        print(" "*6 + "!!! " + self.error_text)
+                        return False
+                
+                elif yaml_type == 'fw_ext_tables_params':
+                    # Обработка YAML файла с параметрами внешних таблиц
+                    if not self.process_yaml_fw_ext_tables_params(migration_data, self.env):
                         print(" "*6 + "!!! " + self.error_text)
                         return False
                         

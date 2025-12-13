@@ -196,6 +196,11 @@ def _execute_change_migration(db, migration, change_path, handler, cont, set_dir
                 if not handler.process_yaml_fw_object(migration_data, 'dev'):
                     print("    " + f"!!! {handler.error_text}")
                     return False
+            elif y_type == 'fw_ext_tables_params':
+                # Delegate to handler's YAML processor to call fw.f_save_ext_tables_params
+                if not handler.process_yaml_fw_ext_tables_params(migration_data, 'dev'):
+                    print("    " + f"!!! {handler.error_text}")
+                    return False
             else:
                 print("    " + f"!!! Unsupported YAML type: {y_type}")
                 return False

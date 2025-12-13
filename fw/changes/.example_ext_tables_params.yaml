@@ -1,0 +1,32 @@
+# Пример YAML файла для загрузки параметров внешних таблиц в fw.ext_tables_params
+# Используется для настройки строк подключения для разных сред
+
+type: fw_ext_tables_params
+description: Параметры внешних таблиц для объекта 1234 - метод gpfdist
+
+params:
+  # Общие параметры для всех сред
+  all:
+    object_id: 1234
+    load_method: gpfdist
+    active: true
+  
+  # Параметры специфичные для DEV среды
+  dev:
+    connection_string: 'gpfdist://dev-server:8081/data/*.csv'
+    additional: 'FORMAT ''CSV'' DELIMITER '','' NULL '''' QUOTE ''"'' HEADER'
+  
+  # Параметры специфичные для PROD среды
+  prod:
+    connection_string: 'gpfdist://prod-server:8081/data/*.csv'
+    additional: 'FORMAT ''CSV'' DELIMITER '','' NULL '''' QUOTE ''"'' HEADER'
+
+# Применение:
+# 1. В рамках релиза: поместите файл в директорию релиза и добавьте в migration.json
+# 2. В рамках изменений: поместите в fw/changes/<set_name>/ и используйте команду apply
+#
+# Команды:
+# - Миграция релиза: python manage.py migrate -s <set_name> -e <env>
+# - Применение изменения: python manage.py apply -s <set_name> -e <env>
+# - Копирование из БД: python manage.py copy_ext_tab_par -id <object_id> -envlist dev,prod
+
