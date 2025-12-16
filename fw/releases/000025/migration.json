@@ -1,6 +1,4 @@
 [
     {
-        "migration": "DWH-42709.sql",
-        "rollback": ""
     }
 ]
