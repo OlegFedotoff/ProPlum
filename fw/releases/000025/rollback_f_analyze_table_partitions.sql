@@ -1,1 +1,0 @@
-drop FUNCTION IF EXISTS fw.f_analyze_table_partitions;
