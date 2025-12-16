@@ -118,5 +118,25 @@
         "code": "000024",
         "name": "Добавление логирования поля param_list",
         "comment": "Created from change vv_0"
+    },
+    {
+        "code": "000025",
+        "name": "",
+        "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000026",
+        "name": "",
+        "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000027",
+        "name": "",
+        "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000028",
+        "name": "",
+        "comment": "Created from change agb_0"
     }
 ]
