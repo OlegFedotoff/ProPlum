@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "create_f_analyze_table_partitions.sql",
+        "rollback": "rollback_f_analyze_table_partitions.sql"
+    }
+]
