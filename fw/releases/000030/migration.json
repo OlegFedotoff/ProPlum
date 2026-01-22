@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "remove_dependencies.sql",
+        "rollback": "rollback_dependencies.sql"
+    }
+]

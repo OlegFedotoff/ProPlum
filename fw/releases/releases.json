@@ -143,5 +143,10 @@
         "code": "000029",
         "name": "Создание функции fw.f_analyze_table_partitions",
         "comment": "Created from change kglazova_0"
+    },
+    {
+        "code": "000030",
+        "name": "DWH-44308 Перенос объектов analyze таблиц в отдельную",
+        "comment": "Created from change dvs65_1"
     }
 ]
