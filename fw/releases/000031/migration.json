@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_fw_f_write_log.sql",
+        "rollback": "rollback_fw_f_write_log.sql"
+    }
+]
