@@ -158,5 +158,10 @@
         "code": "000032",
         "name": "DWH-46960 Изменение тесткейса для объекта kdw.customer_cd",
         "comment": "Created from change dvs65_1"
+    },
+    {
+        "code": "000033",
+        "name": "DWH-46960 part 2",
+        "comment": ""
     }
 ]
