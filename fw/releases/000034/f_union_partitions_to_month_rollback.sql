@@ -1,3 +1,4 @@
+
 create or replace function fw.f_union_partitions_to_month(p_load_id bigint) returns boolean
     security definer
     language plpgsql
@@ -137,7 +138,7 @@ $$
       RAISE NOTICE 'v_buffer_table % v_cal_date % v_sql %', v_buffer_table, v_cal_date, v_sql;
 
       execute v_sql;
-      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO role_competitor_prices_owner'; --change owner agb DWH-42064 13/04/2026
+      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO role_fw_owner';
       execute 'GRANT ALL ON TABLE ' || v_buffer_table || ' TO role_fw_owner';-- permissions
       v_flag = true;
       FOR rec IN
