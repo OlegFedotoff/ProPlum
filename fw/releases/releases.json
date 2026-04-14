@@ -168,5 +168,10 @@
         "code": "000034",
         "name": "",
         "comment": "Created from change agb_0"
+    },
+    {
+        "code": "000035",
+        "name": "DWH-46306 СбойЗагрузки ADWH: it.load_hybris.job_all.704_hybris_ordcustomertracking_add.f_load_object",
+        "comment": ""
     }
 ]
