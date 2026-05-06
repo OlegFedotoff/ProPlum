@@ -1,0 +1,7 @@
+[
+    {
+        "migration": "f_gen_instance_id(int,text,timestamp,timestamp).sql",
+        "source": "functions",
+        "rollback": ""
+    }
+]
