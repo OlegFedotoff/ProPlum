@@ -400,10 +400,6 @@ databaseChangeLog:
             splitStatements: false
             stripComments: false
         -  sqlFile:
-            path:  .\fw\functions\f_gen_instance_id(int,text,timestamp,timestamp).sql
-            splitStatements: false
-            stripComments: false
-        -  sqlFile:
             path:  .\fw\functions\f_create_ext_table_for_ch(text,int8,text,text,text,text,text).sql
             splitStatements: false
             stripComments: false

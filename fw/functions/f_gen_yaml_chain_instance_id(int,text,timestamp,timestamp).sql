@@ -1,6 +1,6 @@
--- DROP FUNCTION fw.f_gen_instance_id(int, text, timestamp, timestamp);
+-- DROP FUNCTION fw.f_gen_yaml_chain_instance_id(int, text, timestamp, timestamp);
 
-CREATE OR REPLACE FUNCTION fw.f_gen_instance_id(p_check_chain int, p_chain_name text, p_load_from timestamp DEFAULT NULL::timestamp without time zone, p_load_to timestamp DEFAULT NULL::timestamp without time zone)
+CREATE OR REPLACE FUNCTION fw.f_gen_yaml_chain_instance_id(p_check_chain int, p_chain_name text, p_load_from timestamp DEFAULT NULL::timestamp without time zone, p_load_to timestamp DEFAULT NULL::timestamp without time zone)
 	RETURNS int8
 	LANGUAGE plpgsql
 	VOLATILE
@@ -10,7 +10,7 @@ AS $$
     * 2026*/
 /*Function generates instance_id for chain*/
 DECLARE
-    v_location   text := 'fw.f_gen_instance_id';
+    v_location   text := 'fw.f_gen_yaml_chain_instance_id';
     v_chain_name text;
     v_start_date timestamp;
     v_end_date   timestamp;
