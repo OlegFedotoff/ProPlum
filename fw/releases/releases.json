@@ -188,5 +188,10 @@
         "code": "000038",
         "name": "",
         "comment": "Created from change tov_0"
+    },
+    {
+        "code": "000039",
+        "name": "DWH-49097 Z1168: доработка функции f_terminate_lock",
+        "comment": "Created from change shilov_0"
     }
 ]
