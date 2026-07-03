@@ -193,5 +193,10 @@
         "code": "000039",
         "name": "DWH-49097 Z1168: доработка функции f_terminate_lock",
         "comment": "Created from change shilov_0"
+    },
+    {
+        "code": "000040",
+        "name": "DWH-50222 Настройка и исправление работы дага архивации в s3",
+        "comment": "Created from change dvs65_0"
     }
 ]

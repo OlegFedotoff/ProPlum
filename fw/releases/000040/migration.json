@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change.sql",
+        "rollback": "rollback.sql"
+    }
+]
