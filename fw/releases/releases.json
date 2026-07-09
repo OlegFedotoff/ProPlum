@@ -198,5 +198,10 @@
         "code": "000040",
         "name": "DWH-50222 Настройка и исправление работы дага архивации в s3",
         "comment": "Created from change dvs65_0"
+    },
+    {
+        "code": "000041",
+        "name": "OVPA-4912 Некорректно проставляется дата updated_dttm в f_update_load_info",
+        "comment": "Created from change dvs65_0"
     }
 ]

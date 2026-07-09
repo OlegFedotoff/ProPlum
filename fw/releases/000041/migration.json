@@ -1,0 +1,18 @@
+[
+    {
+        "migration": "f_set_load_id_error.sql",
+        "rollback": "f_set_load_id_error_rollback.sql"
+    },
+    {
+        "migration": "f_set_load_id_in_process.sql",
+        "rollback": "f_set_load_id_in_process_rollback.sql"
+    },
+    {
+        "migration": "f_set_load_id_success.sql",
+        "rollback": "f_set_load_id_success_rollback.sql"
+    },
+    {
+        "migration": "f_update_load_info.sql",
+        "rollback": "f_update_load_info_rollback.sql"
+    }
+]

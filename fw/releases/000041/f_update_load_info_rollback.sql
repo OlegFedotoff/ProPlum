@@ -1,5 +1,3 @@
--- DROP FUNCTION fw.f_update_load_info(int8, text, text);
-
 CREATE OR REPLACE FUNCTION fw.f_update_load_info(p_load_id int8, p_field_name text, p_value text)
 	RETURNS void
 	LANGUAGE plpgsql
@@ -11,7 +9,7 @@ AS $$
 	/*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
-/*Update field of fw.load_info via dblink; sets updated_dttm in UTC*/
+/*Function update field of load_info with value */
 DECLARE
   v_location text := 'fw.f_update_load_info';
   v_sql text; 
@@ -36,7 +34,7 @@ BEGIN
         p_load_id     := p_load_id);
      raise exception 'No field with name % in table fw.load_info',p_field_name;
   end if;
-  v_sql = 'UPDATE fw.load_info set '||p_field_name||'='''||p_value||'''::'||v_datatype||',updated_dttm = '''||(now() AT TIME ZONE 'UTC')||''' where load_id = '||p_load_id;
+  v_sql = 'UPDATE fw.load_info set '||p_field_name||'='''||p_value||'''::'||v_datatype||',updated_dttm = '''||current_timestamp||''' where load_id = '||p_load_id;
   perform fw.f_write_log(
    p_log_type    := 'SERVICE', 
    p_log_message := 'UPDATE sql is: '||v_sql, 

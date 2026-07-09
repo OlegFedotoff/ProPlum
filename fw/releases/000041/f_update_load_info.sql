@@ -1,5 +1,3 @@
--- DROP FUNCTION fw.f_update_load_info(int8, text, text);
-
 CREATE OR REPLACE FUNCTION fw.f_update_load_info(p_load_id int8, p_field_name text, p_value text)
 	RETURNS void
 	LANGUAGE plpgsql
@@ -11,7 +9,7 @@ AS $$
 	/*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
-/*Update field of fw.load_info via dblink; sets updated_dttm in UTC*/
+/*Function update field of load_info with value */
 DECLARE
   v_location text := 'fw.f_update_load_info';
   v_sql text; 

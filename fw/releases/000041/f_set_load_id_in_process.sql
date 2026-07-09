@@ -1,5 +1,3 @@
--- DROP FUNCTION fw.f_set_load_id_in_process(int8);
-
 CREATE OR REPLACE FUNCTION fw.f_set_load_id_in_process(p_load_id int8)
 	RETURNS void
 	LANGUAGE plpgsql
@@ -11,7 +9,7 @@ AS $$
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
-/*Set in process status (2) to load_id via dblink; sets updated_dttm in UTC*/
+/*Set in process status to load_id*/
 declare
     v_location             text := 'fw.f_set_load_id_in_process';
     c_in_process_status    int  := 2;

@@ -1,5 +1,3 @@
--- DROP FUNCTION fw.f_set_load_id_success(int8);
-
 CREATE OR REPLACE FUNCTION fw.f_set_load_id_success(p_load_id int8)
 	RETURNS bool
 	LANGUAGE plpgsql
@@ -13,7 +11,7 @@ AS $$
     /*Ismailov Dmitry
     * Sapiens Solutions 
     * 2023*/
-/*Set success status (3) to load_id via dblink; sets updated_dttm in UTC*/
+/*Set success status to load_id*/
 declare
     v_location             text := 'fw.f_set_load_id_success';
     c_success_status       int  := 3;
