@@ -49,6 +49,7 @@ AS $$
       v_cnt_origin       numeric;
       v_new_partition_name text;
       v_check           boolean;
+      v_table_owner     text;
  	BEGIN
     /*created from hdset 2025-03-13*/
 
@@ -132,6 +133,13 @@ AS $$
                          p_load_id     := p_load_id);*/
     v_distribution_key = fw.f_get_distribution_key(v_full_table_name);
     v_partition_key = fw.f_get_partition_key(v_full_table_name);
+    -- EXCHANGE PARTITION requires buffer owner = parent table owner
+    SELECT quote_ident(pg_get_userbyid(c.relowner))
+      INTO v_table_owner
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname = v_schema_name
+       AND c.relname = v_table_name;
     v_cal_date = v_date_start;
     while v_cal_date < v_date_end loop
       v_buffer_table = v_tmp_schema_name||'.'||v_table_name||'_m_'||to_char(v_cal_date, 'MM_YYYY');--v_full_table_name||'_m_'||to_char(v_cal_date, 'MM_YYYY');
@@ -139,7 +147,7 @@ AS $$
       RAISE NOTICE 'v_buffer_table % v_cal_date % v_sql %', v_buffer_table, v_cal_date, v_sql;
 
       execute v_sql;
-      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO role_fw_owner';
+      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO ' || v_table_owner;
       execute 'GRANT ALL ON TABLE ' || v_buffer_table || ' TO role_fw_owner';-- permissions
       v_flag = true;
       FOR rec IN
