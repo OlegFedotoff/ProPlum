@@ -1,8 +1,12 @@
-create or replace function fw.f_union_partitions_to_month(p_load_id bigint) returns boolean
-    security definer
-    language plpgsql
-as
-$$
+-- DROP FUNCTION fw.f_union_partitions_to_month(int8);
+
+CREATE OR REPLACE FUNCTION fw.f_union_partitions_to_month(p_load_id int8)
+	RETURNS bool
+	LANGUAGE plpgsql
+	SECURITY DEFINER
+	VOLATILE
+AS $$
+	
 
 
     /* Solovev D (nov 2024)
@@ -137,7 +141,7 @@ $$
       RAISE NOTICE 'v_buffer_table % v_cal_date % v_sql %', v_buffer_table, v_cal_date, v_sql;
 
       execute v_sql;
-      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO role_fw_owner';
+      execute 'ALTER TABLE ' || v_buffer_table || ' OWNER TO role_competitor_prices_owner'; --change owner agb DWH-42064 13/04/2026
       execute 'GRANT ALL ON TABLE ' || v_buffer_table || ' TO role_fw_owner';-- permissions
       v_flag = true;
       FOR rec IN
@@ -276,6 +280,12 @@ $$
 END;
 
 
-$$;
 
-alter function fw.f_union_partitions_to_month(bigint) owner to role_fw_owner;
+$$
+EXECUTE ON ANY;
+
+-- Permissions
+
+ALTER FUNCTION fw.f_union_partitions_to_month(int8) OWNER TO role_fw_owner;
+GRANT ALL ON FUNCTION fw.f_union_partitions_to_month(int8) TO public;
+GRANT ALL ON FUNCTION fw.f_union_partitions_to_month(int8) TO role_fw_owner;

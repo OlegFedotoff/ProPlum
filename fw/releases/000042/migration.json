@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "migrate_function.sql",
+        "rollback": "rollback_function.sql"
+    }
+]

@@ -203,5 +203,10 @@
         "code": "000041",
         "name": "OVPA-4912 Некорректно проставляется дата updated_dttm в f_update_load_info",
         "comment": "Created from change dvs65_0"
+    },
+    {
+        "code": "000042",
+        "name": "DWH-50559 Работы по охлаждению данных глубоких исторических периодов",
+        "comment": ""
     }
 ]

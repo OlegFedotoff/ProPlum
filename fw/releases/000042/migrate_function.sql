@@ -1,8 +1,10 @@
-create or replace function fw.f_union_partitions_to_month(p_load_id bigint) returns boolean
-    security definer
-    language plpgsql
-as
-$$
+CREATE OR REPLACE FUNCTION fw.f_union_partitions_to_month(p_load_id int8)
+	RETURNS bool
+	LANGUAGE plpgsql
+	SECURITY DEFINER
+	VOLATILE
+AS $$
+	
 
 
     /* Solovev D (nov 2024)
@@ -276,6 +278,6 @@ $$
 END;
 
 
-$$;
 
-alter function fw.f_union_partitions_to_month(bigint) owner to role_fw_owner;
+$$
+EXECUTE ON ANY;
