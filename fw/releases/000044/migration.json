@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "change_fw_f_restore_archive_data.sql",
+        "rollback": "rollback_fw_f_restore_archive_data.sql"
+    }
+]
