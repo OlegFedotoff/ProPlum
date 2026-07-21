@@ -9,7 +9,6 @@ AS $$
 	
 DECLARE
   v_location       text    := 'fw.f_terminate_lock';
-  v_error          text;
   v_res            bool    := false;
   v_seg_res        bool;
   v_table_name     text;
@@ -73,21 +72,7 @@ BEGIN
   )
   LOOP
     -- ШАГ 1: Завершаем QD-процесс на мастере
-    BEGIN
-      SELECT terminate_result
-      INTO   v_res
-      FROM   srar_analytics.terminate_backend_with_log(
-               p_pid             := rec.pid::integer,
-               p_session_id      := rec.sess_id::bigint,
-               p_data_src        := v_location,
-               p_verify_delay_ms := 50
-             );
-    EXCEPTION WHEN OTHERS THEN
-      v_error := 'ERROR while terminate pid ' || coalesce(rec.pid::text, '<NULL>') || ': ' || sqlerrm;
-      RAISE NOTICE '%', v_error;
-      PERFORM fw.f_write_log('ERROR', v_error, v_location);
-      v_res := null;
-    END;
+    v_res := fw.f_terminate_backend(rec.pid);
 
     -- ШАГ 2: Завершаем QE-процессы на всех сегментах по sess_id
     BEGIN
@@ -136,3 +121,8 @@ END;
 
 $$
 EXECUTE ON ANY;
+
+-- Необходимо выдать эти права самостоятельно до миграции
+-- ALTER FUNCTION fw.f_terminate_lock(text) OWNER TO role_fw_owner;
+-- Необходимо выдать эти права самостоятельно после миграции
+-- ALTER FUNCTION fw.f_terminate_lock(text) OWNER TO komus_dba;
