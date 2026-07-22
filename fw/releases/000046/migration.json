@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "add_obj.sql",
+        "rollback": "rollback_obj.sql"
+    }
+]

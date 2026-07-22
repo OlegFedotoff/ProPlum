@@ -223,5 +223,10 @@
         "code": "000045",
         "name": "DWH-50155 Доработка функции f_terminate_lock. Заменить вызов pg_terminate_backend на terminate_backend_with_log на мастере",
         "comment": "Created from change shilov_0"
+    },
+    {
+        "code": "000046",
+        "name": "DWH-50715",
+        "comment": ""
     }
 ]
