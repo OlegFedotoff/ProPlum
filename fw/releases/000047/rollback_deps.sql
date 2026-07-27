@@ -1,0 +1,1 @@
+delete from fw.dependencies where object_id = 741 and object_id_depend = 578;

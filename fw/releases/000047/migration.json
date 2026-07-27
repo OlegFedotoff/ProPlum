@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "add_deps.sql",
+        "rollback": "rollback_deps.sql"
+    }
+]
