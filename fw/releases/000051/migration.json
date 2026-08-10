@@ -1,0 +1,10 @@
+[
+    {
+        "migration": "create_f_terminate_lock_two_param.sql",
+        "rollback": "rollback_f_terminate_lock_two_param.sql"
+    },
+    {
+        "migration": "create_f_terminate_lock_one_param.sql",
+        "rollback": "rollback_f_terminate_lock_one_param.sql"
+    }
+]

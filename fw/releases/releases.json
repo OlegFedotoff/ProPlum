@@ -248,5 +248,10 @@
         "code": "000050",
         "name": "DWH-50871",
         "comment": ""
+    },
+    {
+        "code": "000051",
+        "name": "DWH-51131 Добавлена функция fw.f_terminate_lock_with_source с указанием источника вызова, а существующая fw.f_terminate_lock переведена на её использование с сохранением обратной совместимости.",
+        "comment": "Created from change shilov_0"
     }
 ]
