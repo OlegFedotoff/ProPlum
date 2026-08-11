@@ -1,0 +1,6 @@
+[
+    {
+        "migration": "create_f_terminate_lock_with_source.sql",
+        "rollback": "rollback_f_terminate_lock_with_source.sql"
+    }
+]

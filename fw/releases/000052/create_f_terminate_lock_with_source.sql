@@ -163,3 +163,8 @@ END;
 
 $$
 EXECUTE ON ANY;
+
+-- Необходимо выдать эти права самостоятельно до миграции
+-- ALTER FUNCTION fw.f_terminate_lock_with_source(text, text) OWNER TO role_fw_owner;
+-- Необходимо выдать эти права самостоятельно после миграции
+-- ALTER FUNCTION fw.f_terminate_lock_with_source(text, text) OWNER TO komus_dba;

@@ -22,26 +22,9 @@ DECLARE
   v_seg_res        bool;
   v_table_name     text;
   v_root_oid       oid;
-  v_current_sess_id bigint;
   rec              record;
 BEGIN
   v_table_name := fw.f_unify_name(p_table_name);
-
-  -- PID-ы QD и QE различаются, но относятся к одной логической GP-сессии.
-  -- Сохраняем sess_id, чтобы не завершить собственные процессы на сегментах.
-  SELECT a.sess_id::bigint
-  INTO   v_current_sess_id
-  FROM   fw.f_stat_activity() a
-  WHERE  a.pid = pg_backend_pid();
-
-  IF v_current_sess_id IS NULL THEN
-    PERFORM fw.f_write_log(
-      p_log_type    := 'ERROR',
-      p_log_message := 'Cannot determine current sess_id for pid=' || pg_backend_pid(),
-      p_location    := v_location
-    );
-    RETURN false;
-  END IF;
 
   -- Получаем OID
   BEGIN
@@ -63,8 +46,6 @@ BEGIN
     WHERE  l.locktype   = 'relation'
       AND  d.datname    = current_database()
       AND  a.pid       <> pg_backend_pid()
-      AND  a.sess_id    IS DISTINCT FROM v_current_sess_id
-      AND  l.mppsessionid IS DISTINCT FROM v_current_sess_id
       AND  a.rsgname   <> 'etl_group'
       AND  l.relation  IN (
 
@@ -163,3 +144,8 @@ END;
 
 $$
 EXECUTE ON ANY;
+
+-- Необходимо выдать эти права самостоятельно до миграции
+-- ALTER FUNCTION fw.f_terminate_lock_with_source(text, text) OWNER TO role_fw_owner;
+-- Необходимо выдать эти права самостоятельно после миграции
+-- ALTER FUNCTION fw.f_terminate_lock_with_source(text, text) OWNER TO komus_dba;
