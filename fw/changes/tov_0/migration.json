@@ -1,0 +1,16 @@
+[
+    {
+        "migration": "insert_dictionaries.sql",
+        "rollback": "rollback_insert_dictionaries.sql"
+    },
+    {
+        "migration": "f_prepare_ingestion(int8).sql",
+        "source": "functions",
+        "rollback": ""
+    },
+    {
+        "migration": "f_finalize_ingestion(int8).sql",
+        "source": "functions",
+        "rollback": ""
+    }
+]
