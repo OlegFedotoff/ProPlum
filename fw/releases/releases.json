@@ -258,5 +258,10 @@
         "code": "000052",
         "name": "DWH-51131 Исправлено завершение процессов собственной Greenplum-сессии при снятии блокировок. Добавлена фильтрация по sess_id, предотвращающая DTX-ошибки при замене партиций",
         "comment": "Created from change shilov_0"
+    },
+    {
+        "code": "000053",
+        "name": "",
+        "comment": "Created from change tov_0"
     }
 ]
