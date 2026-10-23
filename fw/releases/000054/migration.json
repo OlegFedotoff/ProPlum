@@ -1,0 +1,22 @@
+[
+    {
+        "migration": "partition_queue.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "partition_run.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "command_queue.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "command_batch.sql",
+        "source": "tables",
+        "rollback": ""
+    }
+]
