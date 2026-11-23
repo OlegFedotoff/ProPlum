@@ -55,7 +55,7 @@ BEGIN
   v_step_days   := date_part('day', v_load_interval)::int;
   if v_load_interval is null
      or (v_step_months > 0) = (v_step_days > 0)
-     or v_load_interval <> make_interval(months => v_step_months, days => v_step_days) then
+     or v_load_interval <> make_interval(months := v_step_months, days := v_step_days) then
      raise exception 'Unsupported load_interval % for object %: expected whole months/years or whole days',
        v_load_interval, p_object_id;
   end if;
