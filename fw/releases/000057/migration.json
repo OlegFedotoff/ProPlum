@@ -1,0 +1,25 @@
+[
+    {
+        "migration": "object_reload.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "object_reload_log.sql",
+        "source": "tables",
+        "rollback": ""
+    },
+    {
+        "migration": "f_request_reload(int8,date,date,date).sql",
+        "source": "functions",
+        "rollback": ""
+    },
+    {
+        "migration": "f_cancel_reload(int8).sql",
+        "source": "functions",
+        "rollback": ""
+    },
+    { "migration": "f_update_load_info(int8,text,text).sql", "source": "functions", "rollback": "" },
+    { "migration": "f_set_load_id_success(int8).sql", "source": "functions", "rollback": "" },
+    { "migration": "f_set_load_id_error(int8).sql", "source": "functions", "rollback": "" }    
+]

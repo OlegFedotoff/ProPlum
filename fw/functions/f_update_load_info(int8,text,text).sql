@@ -36,7 +36,7 @@ BEGIN
         p_load_id     := p_load_id);
      raise exception 'No field with name % in table fw.load_info',p_field_name;
   end if;
-  v_sql = 'UPDATE fw.load_info set '||p_field_name||'='''||p_value||'''::'||v_datatype||',updated_dttm = '''||(now() AT TIME ZONE 'UTC')||''' where load_id = '||p_load_id;
+  v_sql = 'UPDATE fw.load_info set '||p_field_name||'='''||p_value||'''::'||v_datatype||',updated_dttm = (now() AT TIME ZONE ''UTC'') where load_id = '||p_load_id;
   perform fw.f_write_log(
    p_log_type    := 'SERVICE', 
    p_log_message := 'UPDATE sql is: '||v_sql, 
