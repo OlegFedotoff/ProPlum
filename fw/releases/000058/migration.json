@@ -1,0 +1,12 @@
+[
+    {
+        "migration": "f_finish_reload(int8).sql",
+        "source": "functions",
+        "rollback": ""
+    },
+    {
+        "migration": "f_set_load_id_success(int8).sql",
+        "source": "functions",
+        "rollback": ""
+    }
+]
